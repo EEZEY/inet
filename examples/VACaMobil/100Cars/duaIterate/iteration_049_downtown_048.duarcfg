@@ -1,0 +1,30 @@
+<configuration>
+    <input>
+        <net-file value="../downtown.mapa.xml"/>
+        <alternative-files value="downtown_048.rou.alt.xml"/>
+        <weights value="dump_048_900.xml"/>
+    </input>
+    <output>
+        <output-file value="downtown_049.rou.xml"/>
+        <exit-times value="False"/>
+    </output>
+    <processing>
+        <ignore-errors value="True"/>
+        <with-taz value="False"/>
+        <gawron.beta value="0.9"/>
+        <gawron.a value="0.5"/>
+        <keep-all-routes value="False"/>
+        <routing-algorithm value="dijkstra"/>
+        <max-alternatives value="5"/>
+        <logit value="False"/>
+        <logit.beta value="0.15"/>
+        <logit.gamma value="1.0"/>
+    </processing>
+    <random_number><random value="False"/></random_number>
+    <time><begin value="0"/> </time>
+    <report>
+        <verbose value="False"/>
+        <no-step-log value="True"/>
+        <no-warnings value="False"/>
+    </report>
+</configuration>
