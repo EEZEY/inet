@@ -616,7 +616,7 @@ void VACaMobil::finish(){
         std::ofstream f2(prefix.append(HEATMAP_AREA).c_str());
         std::map<std::pair<int, int>, int >::iterator ait;
         for(ait= this->heatmapArea->begin(); ait != this->heatmapArea->end(); ait++){
-            f2 << ait->first.first << "," << ait->first.second << " " << ait->second << endl;
+            f2 << ait->first.first << " " << ait->first.second << " " << ait->second << endl;
         }
         f2.close();
     }
