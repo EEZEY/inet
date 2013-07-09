@@ -35,8 +35,8 @@ simple VACaMobil extends TraCIScenarioManagerLaunchd
     string statFiles = default("");
     bool doNothing = default(false); //If it's set to true it should work like TRACI Scenario Manager Launchd
     xml rsuPlacement = default(xml("<poas></poas>")); //VACaMobil supports the creation of Road Side Units which location is specified in this file
-    string rsuModule; //The omnetpp module of RSU.
-    string rsuPrefix; //The omnetpp module of RSU.
+    string rsuModule = default(""); //The omnetpp module of RSU.
+    string rsuPrefix = default(""); //The omnetpp module of RSU.
     int nRandomRsu = default(0); //number of RSU place randomly in joints.
     @signal[onSimulationCarsSignal];
     @statistic[onSimulationCars](title="Active cars";source="onSimulationCarsSignal";record=vector,stats);

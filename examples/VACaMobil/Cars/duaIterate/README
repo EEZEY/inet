@@ -1,0 +1,6 @@
+The files included in this directory have been generated using the following commands:
+
+/usr/share/sumo/tools/trip/randomTrips.py -b 0 -e 100 -p 1 -n mapa.sumo.xml #generate random trips
+duarouter -n mapa.sumo.xml -t trips.trips.xml -o routes.sumo.xml #compute shortest path routes using dijsktra
+sed -i 's/depart=".*"/depart="0.00"'/g routes.sumo.xml #replace departure time by 0.00
+/usr/share/sumo/tools/assign/duaIterate.py -n mapa.sumo.xml -r routes.sumo.xml -L -C #compute new optimal routes to minimize trip times

@@ -68,8 +68,10 @@ void VACaMobil::initialize(int stage)
         WATCH(goingDown);
 
         onSimulationCarsSignal = registerSignal("onSimulationCarsSignal");
+
         nRandomRsu = par("nRandomRsu");
         namePrefix = par("rsuPrefix").stringValue();
+
         rsuInitialized = false;
     }
 }
