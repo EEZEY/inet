@@ -604,7 +604,7 @@ std::list<std::string> VACaMobil::getLaneNames(std::string routeName) {
 void VACaMobil::finish(){
     TraCIScenarioManagerLaunchd::finish();
     if(getStats){
-        std::string prefix = par("statFiles").str();
+        std::string prefix = par("statFiles").stringValue();
         std::ofstream f1(prefix.append(HEATMAP_ROADS).c_str());
         std::map<std::string, int >::iterator eit;
         for(eit = this->heatmapRoads->begin(); eit != this->heatmapRoads->end(); eit++){
@@ -612,11 +612,13 @@ void VACaMobil::finish(){
         }
         f1.close();
 
-        prefix = par("statFiles").str();
+        prefix = par("statFiles").stringValue();
         std::ofstream f2(prefix.append(HEATMAP_AREA).c_str());
         std::map<std::pair<int, int>, int >::iterator ait;
         for(ait= this->heatmapArea->begin(); ait != this->heatmapArea->end(); ait++){
-            f2 << ait->first.first << " " << ait->first.second << " " << ait->second << endl;
+            for(int i=0; i< ait->second; i++){
+                f2 << ait->first.first << " " << ait->first.second << endl;
+            }
         }
         f2.close();
     }
