@@ -4,6 +4,6 @@
 	<copy file="mapa.sumo.xml" />
 	<copy file="routes.sumo.xml" />
 	<copy file="configuration.sumo.cfg" type="config" />
-	<basedir path="../examples/VACaMobil/carGRCnator/Manhattan25/"/>
+	<basedir path="../examples/VACaMobil/VACaMobil/Manhattan25/"/>
 </launch>
 

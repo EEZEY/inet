@@ -4,6 +4,6 @@
 	<copy file="downtown.mapa.xml" />
 	<copy file="downtown.routes.xml" />
 	<copy file="downtown.sumo.cfg" type="config" />
-	<basedir path="../examples/VACaMobil/carGRCnator/Milan/"/>
+	<basedir path="../examples/VACaMobil/VACaMobil/Milan/"/>
 </launch>
 
