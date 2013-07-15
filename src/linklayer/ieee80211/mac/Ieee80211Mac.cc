@@ -326,6 +326,7 @@ void Ieee80211Mac::initialize(int stage)
         }
 
         numCollision = 0;
+        collision = registerSignal("collisionSignal");
         numInternalCollision = 0;
         numReceived = 0;
         numSentMulticast = -1; //sorin
@@ -1328,6 +1329,7 @@ void Ieee80211Mac::handleWithFSM(cMessage *msg)
                                      IDLE,
                                      EV << "received frame contains bit errors or collision, next wait period is EIFS\n";
                                      numCollision++;
+                                     emit(collision, 0);
                                      if (fixFSM)
                                          finishReception();
                                      else

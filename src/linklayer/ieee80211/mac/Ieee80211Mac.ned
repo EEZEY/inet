@@ -112,6 +112,8 @@ simple Ieee80211Mac
         // statistics
         double throughputTimePeriod @unit("s") = default(0); // period of time used by throughput measurement statistic
         bool multiMac = default(false); // allows multiples mac interfaces in the same link layer
+        @signal[collisionSignal];
+        @statistic[collision](title="Collisions detected";source="collisionSignal";record=count,vector);
         @display("i=block/layer");
 
     gates:

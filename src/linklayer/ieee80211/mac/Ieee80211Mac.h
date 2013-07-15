@@ -399,6 +399,7 @@ class INET_API Ieee80211Mac : public WirelessMacBase, public INotifiable
     // long numSentWithoutRetry[4];
     // long numGivenUp[4];
     long numCollision;
+    simsignal_t collision;
     long numInternalCollision;
     // long numSent[4];
     long numBites;
