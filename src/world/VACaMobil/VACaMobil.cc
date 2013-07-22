@@ -121,7 +121,7 @@ void VACaMobil::handleMessage(cMessage *msg)
             rsuInitialized = true;
         }
     }
-    ASSERT(canAddCar);
+    ASSERT2(canAddCar, "A new car cannot be added, check the number of routes");
 }
 
 void VACaMobil::retrieveInitialInformation(){
@@ -454,12 +454,14 @@ bool VACaMobil::warmupPeriodAddCars() {
 bool VACaMobil::AddCarsUntil(int finalTime, int carsToAddAtTheEnd) {
     bool sucess = true;
 
-    int remainingTime = finalTime - simTime().dbl();
+    double remainingTime = finalTime - simTime().dbl();
     int remainingCarsToAdd = carsToAddAtTheEnd - onSimulationCars;
 
     int carsToAdd;
-    if(remainingTime > 0) {
-        carsToAdd = (int)(((remainingCarsToAdd)/(double)remainingTime)+0.5);
+    int steps;
+    steps = round(remainingTime / updateInterval.dbl());
+    if(steps > 0) {
+        carsToAdd = round((remainingCarsToAdd)/steps);
     } else {
         carsToAdd = remainingCarsToAdd;
     }

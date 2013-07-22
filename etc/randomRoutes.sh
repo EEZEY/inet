@@ -4,7 +4,7 @@ NETFILE="";
 ROUTEFILE="";
 NROUTES=5000;
 
-SUMOTOOLS=~/sumo-0.15.0/tools;
+SUMOTOOLS=/usr/share/sumo/tools;
 DUAROUTER=duarouter;
 USEDUAITERATE="0";
 KEEPROUTE="0";
@@ -15,7 +15,13 @@ TRIPSFILE="trips.trips.xml";
 
 HELP="-h: shows this help\n-n: netfile\n-r: name of the output route file\n-N: Number of routes to generate\n-s: path to the directory tools of sumo\n-i: If present employs duaIterate instead of duaroute";
 
+if [[ $# -eq 0 ]]
+then
+  echo -e "$HELP" ; exit;
+fi
+
 set --$(getopt :hn:r:N:t:s:ik "$@")
+
 while [ $# -gt 0 ]
 do
     case "$1" in
@@ -25,11 +31,11 @@ do
     (-N) NROUTES="$2"; shift;;
     (-t) TRIPGENERATOR="$2"; shift;;
     (-s) SUMOTOOLS="$2"; shift;;
-    (-i) USEDUAITERATE="1";;
+    (-i) USEDUAITERATE="1";; 
     (-k) KEEPROUTE="1";;
     (--) shift; break;;
     (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
-    (*)  break;;
+    (*)  echo -e "$HELP" ; exit;;
     esac
     shift
 done
