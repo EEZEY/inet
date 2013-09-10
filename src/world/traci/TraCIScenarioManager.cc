@@ -306,14 +306,14 @@ void TraCIScenarioManager::init_traci() {
 		uint32_t beginTime = 0;
 		uint32_t endTime = 0x7FFFFFFF;
 		std::string objectId = "";
-		uint8_t variableNumber = 6;
+		uint8_t variableNumber = 5;
 		uint8_t variable1 = VAR_DEPARTED_VEHICLES_IDS;
 		uint8_t variable2 = VAR_ARRIVED_VEHICLES_IDS;
 		uint8_t variable3 = VAR_TIME_STEP;
 		uint8_t variable4 = VAR_TELEPORT_STARTING_VEHICLES_IDS;
 		uint8_t variable5 = VAR_TELEPORT_ENDING_VEHICLES_IDS;
-        uint8_t variable6 = VAR_MIN_EXPECTED_VEHICLES;
-		TraCIBuffer buf = queryTraCI(CMD_SUBSCRIBE_SIM_VARIABLE, TraCIBuffer() << beginTime << endTime << objectId << variableNumber << variable1 << variable2 << variable3  << variable4 << variable5 << variable6);
+        //uint8_t variable6 = VAR_MIN_EXPECTED_VEHICLES;
+		TraCIBuffer buf = queryTraCI(CMD_SUBSCRIBE_SIM_VARIABLE, TraCIBuffer() << beginTime << endTime << objectId << variableNumber << variable1 << variable2 << variable3  << variable4 << variable5);
 		processSubcriptionResult(buf);
 		ASSERT(buf.eof());
 	}
@@ -1010,7 +1010,7 @@ void TraCIScenarioManager::processSimSubscription(std::string objectId, TraCIBuf
             activeVehicleCount += count;
             //printf("[FT] active %d | teleport %d | count %d\n", activeVehicleCount, teleportedVehiclesCount, count);
 
-        } else if (variable1_resp == VAR_MIN_EXPECTED_VEHICLES) {
+       /* } else if (variable1_resp == VAR_MIN_EXPECTED_VEHICLES) {
             uint8_t varType; buf >> varType;
             ASSERT(varType == TYPE_INTEGER);
             uint32_t count; buf >> count;
@@ -1030,7 +1030,7 @@ void TraCIScenarioManager::processSimSubscription(std::string objectId, TraCIBuf
 
             //printf("[LV] active %d | teleport %d | count %d\n", activeVehicleCount, teleportedVehiclesCount, count);
 
-        } else if (variable1_resp == VAR_TIME_STEP) {
+        */} else if (variable1_resp == VAR_TIME_STEP) {
             uint8_t varType; buf >> varType;
             ASSERT(varType == TYPE_INTEGER);
             uint32_t serverTimestep; buf >> serverTimestep;

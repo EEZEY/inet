@@ -217,11 +217,11 @@ void VACaMobil::retrieveVehicleInformation()
         }
 
         //Mostrando los vehiculos por pantalla
-//        std::set<struct typerate>::iterator itaux;
-//        for( itaux = this->vehicles.begin(); itaux != this->vehicles.end(); itaux++){
-//            struct typerate aux = *itaux;
-//            printf("Vehiculo %s %f\n", aux.type.c_str(), aux.rate);
-//        }
+        std::list<Typerate>::iterator itaux;
+        for( itaux = vehicles.begin(); itaux != vehicles.end(); itaux++){
+            Typerate aux = *itaux;
+            EV << "Vehiculo " << aux.type.c_str() <<" "<< aux.rate << std::endl;
+        }
 }
 
 void VACaMobil::parseRsu()
@@ -492,6 +492,7 @@ bool VACaMobil::addCarWholeMap(void) {
     do {
         std::list<std::string> lanes = getLaneNames(actualRoute);
         for(std::list<std::string>::iterator laneIterator = lanes.begin(); laneIterator != lanes.end() && !carAdded; laneIterator++) {
+            EV << "TIPOVEHICULO  " << actualType.c_str() << std::endl;
             carAdded = TraCIScenarioManager::commandAddVehicle(vehicleString, actualType.c_str(), actualRoute.c_str(), laneIterator->c_str(), 0.0, 0.0);
         }
         actualRoute = getNextRoute();
@@ -503,6 +504,7 @@ bool VACaMobil::addCarWholeMap(void) {
 /*
  * Tries to add a car.
  * Returns true or false indicating whether if its successfull or not.
+ * DEPRECATED
  */
 bool VACaMobil::addCar()
 {
