@@ -27,9 +27,16 @@ simple VACaMobil extends TraCIScenarioManagerLaunchd
     @class("VACaMobil");
     
     string vehicleRates = default("");
+    
+    string chooseVACaMobilMode @enum("Mean","InterArrivalTime") = default("Mean"); //If set to interArrivalTime VACaMobil do not ensures the restriction of "MeanNumbersOfCar+-carHystereisValue" to be accomplished but provides support for scenarios with low number of entry points (such as highways).
+    
+    //Variables for mean mode.
     int meanNumberOfCars = default(0);
     int carHysteresisValue = default(0);
     int warmUpSeconds @unit(s) = default(-1s); //With a value lower than firstStepAt uses simulation.getWarmupPeriod()
+    
+    //Variables for interArrivalTime mode.
+    volatile double interArrivalInitialTime @unit(s) = default(1s); //When VACaMobil is working in InterArrivalTime Mode it adds vehicles with this interArrivalTime. exponential(${VehicleRate=1s,2s,3s})}
     
     bool getStatistics = default(false); //If set to true it generates some kind-of heat maps
     string statFiles = default("");
@@ -38,6 +45,7 @@ simple VACaMobil extends TraCIScenarioManagerLaunchd
     string rsuModule = default(""); //The omnetpp module of RSU.
     string rsuPrefix = default(""); //The omnetpp module of RSU.
     int nRandomRsu = default(0); //number of RSU place randomly in joints.
+    
     @signal[onSimulationCarsSignal];
     @statistic[onSimulationCars](title="Active cars";source="onSimulationCarsSignal";record=vector,stats);
 }

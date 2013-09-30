@@ -42,6 +42,12 @@ class Comp {
  */
 class INET_API VACaMobil : public TraCIScenarioManagerLaunchd
 {
+public:
+    enum ChooseVACaMobilMode
+    {
+        MEAN = 1, INTER_ARRIVAL_TIME
+    };
+
   protected:
     virtual int numInitStages() const { return std::max(TraCIScenarioManagerLaunchd::numInitStages(), 2); }
     virtual void initialize(int stage);
@@ -62,6 +68,12 @@ class INET_API VACaMobil : public TraCIScenarioManagerLaunchd
     int timeLimitToAdd;
     simtime_t lastDowntime;
     bool goingDown;
+
+
+    //Inter Arrival Time Mode related Variables
+    bool IATMode;
+    //Message used to addCars when working in highway mode.
+    cMessage* IATAddVehicle;
 
     const char *vRates;
 
