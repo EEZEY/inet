@@ -26,7 +26,15 @@ simple VACaMobil extends TraCIScenarioManagerLaunchd
     @display("i=block/source");
     @class("VACaMobil");
     
-    string vehicleRates = default("");
+    string vehicleRates = default(""); //This is a tricky parameter, 
+    //we recommend to check the EV log file in the first simulation to ensure that the correct probabilities are stated. They are printed at initialization.
+    //One working mode is to define the probabilities of the vehicles ordered ex. "0.1 0.3 0.6", the tricky part is that it should be the TraCI order wich is usually unknown
+    //
+    //The second working mode (the good one) is defining probabilities associated to certain types of vehicles.
+    //ex. "Vehicle1=0.5 Vehicle2=0.3 Vehicle3=0.2"
+    //So, a general rule will be: "<VehicleName>=<probability> <space> <VehicleName>=<probability>..." 
+    //
+    //In both cases, if the total sum is greater than one the result is normalized.
     
     string chooseVACaMobilMode @enum("Mean","InterArrivalTime") = default("Mean"); //If set to interArrivalTime VACaMobil do not ensures the restriction of "MeanNumbersOfCar+-carHystereisValue" to be accomplished but provides support for scenarios with low number of entry points (such as highways).
     

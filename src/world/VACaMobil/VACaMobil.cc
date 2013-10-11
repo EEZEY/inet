@@ -213,7 +213,11 @@ void VACaMobil::retrieveVehicleInformation()
         const char *token;
 
         std::list<std::string> vehiclesTraCI = commandGetVehicleIds();
-        //printf("Recuperados %d vehiculos\n", vehiclesTraCI.size());
+
+        if(debug) {
+            EV << "Recuperados "<< vehiclesTraCI.size() << " vehiculos."<< std::endl;
+            EV << "VRATES " << vRates << std::endl;
+        }
         double totalRate = 0;
         std::list<Typerate> vehicles;
         std::list<std::string>::iterator it = vehiclesTraCI.begin();
@@ -236,7 +240,7 @@ void VACaMobil::retrieveVehicleInformation()
                    rate = strtod(token, &finalPtr);
                }
             }
-            //printf("Vehiculo %s %f\n", type.c_str(), rate);
+            printf("Vehiculo %s %f\n", type.c_str(), rate);
             vehicles.push_back(Typerate{type, rate});
             totalRate = totalRate + rate;
             it++;
