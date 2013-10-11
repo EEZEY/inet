@@ -107,6 +107,7 @@ class INET_API TraCIScenarioManager : public cSimpleModule
 		std::string commandGetEdgeId(std::string nodeId);
 		std::string commandGetCurrentEdgeOnRoute(std::string nodeId);
 		std::string commandGetLaneId(std::string nodeId);
+		std::string commandGetTypeId(std::string nodeId);
 		double commandGetLanePosition(std::string nodeId);
 		std::list<std::string> commandGetPlannedEdgeIds(std::string nodeId);
 		std::string commandGetRouteId(std::string nodeId);

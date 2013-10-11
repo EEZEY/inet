@@ -429,6 +429,10 @@ std::string TraCIScenarioManager::commandGetLaneId(std::string nodeId) {
 	return genericGetString(CMD_GET_VEHICLE_VARIABLE, nodeId, VAR_LANE_ID, RESPONSE_GET_VEHICLE_VARIABLE);
 }
 
+std::string TraCIScenarioManager::commandGetTypeId(std::string nodeId) {
+    return genericGetString(CMD_GET_VEHICLE_VARIABLE, nodeId, VAR_TYPE, RESPONSE_GET_VEHICLE_VARIABLE);
+}
+
 double TraCIScenarioManager::commandGetLanePosition(std::string nodeId) {
 	return genericGetDouble(CMD_GET_VEHICLE_VARIABLE, nodeId, VAR_LANEPOSITION, RESPONSE_GET_VEHICLE_VARIABLE);
 }

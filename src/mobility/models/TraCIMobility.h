@@ -156,6 +156,9 @@ class INET_API TraCIMobility : public MobilityBase
         bool commandAddVehicle(std::string vehicleId, std::string vehicleTypeId, std::string routeId, std::string laneId, double emitPosition, double emitSpeed) {
             return getManager()->commandAddVehicle(vehicleId, vehicleTypeId, routeId, laneId, emitPosition, emitSpeed);
         }
+        std::string commandGetVehicleTypeId() {
+            return getManager()->commandGetTypeId(getExternalId());
+        }
 
     protected:
         bool debug; /**< whether to emit debug messages */
