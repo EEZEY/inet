@@ -26,8 +26,8 @@
 EXECUTE_ON_STARTUP(
     cEnum *e = cEnum::find("ChooseVACaMobilMode");
     if (!e) enums.getInstance()->add(e = new cEnum("ChooseVACaMobilMode"));
-    e->insert(VACaMobil::MEAN, "Mean");
-    e->insert(VACaMobil::INTER_ARRIVAL_TIME, "InterArrivalTime");
+    e->insert(VACaMobil::STEADYSTATE, "SteadyState");
+    e->insert(VACaMobil::RANDOM, "RandomGeneration");
 );
 
 
@@ -45,15 +45,16 @@ void VACaMobil::initialize(int stage)
 
         const char *ModeStr = par("chooseVACaMobilMode").stringValue();
         int Mode = cEnum::get("ChooseVACaMobilMode")->lookup(ModeStr);
+
         if (Mode == -1)
                throw cRuntimeError("Invalid chooseVACaMobilMode: '%s'", ModeStr);
-        if(Mode == VACaMobil::INTER_ARRIVAL_TIME) {
-            IATMode = true;
+        if(Mode == VACaMobil::RANDOM) {
+            RandomMode = true;
         }
 
-        IATAddVehicle = NULL;
-        if(IATMode) {
-            IATAddVehicle = new cMessage("AddVehicle");
+        if(RandomMode) {
+            RandomAddVehicle = NULL;
+            RandomAddVehicle = new cMessage("AddVehicle");
         }
 
         acumMedia = 0;
@@ -101,9 +102,9 @@ void VACaMobil::initialize(int stage)
 void VACaMobil::handleMessage(cMessage *msg)
 {
 
-    if (msg == IATAddVehicle) {
+    if (msg == RandomAddVehicle) {
             addCarWholeMap();
-            scheduleAt(simTime().dbl()+par("interArrivalInitialTime").doubleValue(), IATAddVehicle);
+            scheduleAt(simTime().dbl()+par("interArrivalTime").doubleValue(), RandomAddVehicle);
     } else {
         TraCIScenarioManagerLaunchd::handleMessage(msg);
     }
@@ -116,11 +117,11 @@ void VACaMobil::handleMessage(cMessage *msg)
             if(!initialized) {
                 retrieveInitialInformation();
                 initialized = true;
-                if(IATMode) {
-                    scheduleAt(simTime(), IATAddVehicle);
+                if(RandomMode) {
+                    scheduleAt(simTime(), RandomAddVehicle);
                 }
             }
-            if(!IATMode) {
+            if(!RandomMode) {
                 if(simTime() <= warmUpSeconds){
                     canAddCar = warmupPeriodAddCars();
                 } else {
@@ -154,7 +155,7 @@ void VACaMobil::handleMessage(cMessage *msg)
             rsuInitialized = true;
         }
     }
-    if(!IATMode) {
+    if(!RandomMode) {
         ASSERT2(canAddCar, "A new car cannot be added, check the number of routes");
     }
 }
@@ -645,9 +646,9 @@ std::list<std::string> VACaMobil::getLaneNames(std::string routeName) {
 }
 
 void VACaMobil::finish(){
-    if(IATMode && IATAddVehicle != NULL) {
-        cancelAndDelete(IATAddVehicle);
-        IATAddVehicle = NULL;
+    if(RandomMode && RandomAddVehicle != NULL) {
+        cancelAndDelete(RandomAddVehicle);
+        RandomAddVehicle = NULL;
     }
     TraCIScenarioManagerLaunchd::finish();
     if(getStats){

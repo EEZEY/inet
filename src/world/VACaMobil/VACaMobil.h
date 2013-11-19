@@ -45,7 +45,7 @@ class INET_API VACaMobil : public TraCIScenarioManagerLaunchd
 public:
     enum ChooseVACaMobilMode
     {
-        MEAN = 1, INTER_ARRIVAL_TIME
+        STEADYSTATE = 1, RANDOM
     };
 
   protected:
@@ -71,9 +71,9 @@ public:
 
 
     //Inter Arrival Time Mode related Variables
-    bool IATMode;
+    bool RandomMode;
     //Message used to addCars when working in highway mode.
-    cMessage* IATAddVehicle;
+    cMessage* RandomAddVehicle;
 
     const char *vRates;
 
