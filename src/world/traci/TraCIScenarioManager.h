@@ -145,6 +145,14 @@ class INET_API TraCIScenarioManager : public cSimpleModule
          */
         TraCICoord omnet2traci(Coord coord) const;
 
+        /*
+         * Return the netbounds
+         */
+        std::vector<Coord> getNetBounds() const;
+
+        const simtime_t& getFirstStepAt() const {
+                    return firstStepAt;
+                }
 	protected:
 		/**
 		 * Byte-buffer that stores values in TraCI byte-order

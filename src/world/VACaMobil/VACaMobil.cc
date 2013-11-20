@@ -91,11 +91,6 @@ void VACaMobil::initialize(int stage)
         WATCH(goingDown);
 
         onSimulationCarsSignal = registerSignal("onSimulationCarsSignal");
-
-        nRandomRsu = par("nRandomRsu");
-        namePrefix = par("rsuPrefix").stringValue();
-
-        rsuInitialized = false;
     }
 }
 
@@ -145,15 +140,6 @@ void VACaMobil::handleMessage(cMessage *msg)
             updateHeatmaps();
         }
 
-        if(!rsuInitialized){
-            if( nRandomRsu > 0){
-                generateRandomRsus(nRandomRsu);
-            }
-
-            parseRsu();
-            placeRsus();
-            rsuInitialized = true;
-        }
     }
     if(!RandomMode) {
         ASSERT2(canAddCar, "A new car cannot be added, check the number of routes");
@@ -262,97 +248,6 @@ void VACaMobil::retrieveVehicleInformation()
             Typerate aux = *itaux;
             EV << "Vehiculo " << aux.type.c_str() <<" "<< aux.rate << std::endl;
         }
-}
-
-void VACaMobil::parseRsu()
-{
-    cXMLElement* rsuPlacement = par("rsuPlacement").xmlValue();
-    std::string rootTag = rsuPlacement->getTagName();
-    ASSERT(rootTag == "poas");
-    cXMLElementList rsusList = rsuPlacement->getElementsByTagName("poa");
-
-    for (cXMLElementList::const_iterator i = rsusList.begin(); i != rsusList.end(); ++i) {
-        cXMLElement* e = *i;
-        std::string id;
-
-        double x;
-        double y;
-
-        ASSERT(e->getAttribute("id"));
-        id = e->getAttribute("id");
-        ASSERT(e->getAttribute("x"));
-        x = atof(e->getAttribute("x"));
-        ASSERT(e->getAttribute("y"));
-        y = atof(e->getAttribute("y"));
-
-        Coord omnetLoc = traci2omnet(TraCICoord(x,y));
-
-        rsusLocation.push_back(omnetLoc);
-        rsusNames.push_back(id);
-    }
-}
-
-void VACaMobil::createRsu(Coord pos, std::string name)
-{
-    cModule *parent = getParentModule();
-    std::string type = par("rsuModule");
-    cModuleType* moduleType = cModuleType::get(type.c_str());
-    if (!moduleType) error("Module Type \"%s\" not found", type.c_str());
-    cModule *mod = moduleType->create(name.c_str(), parent);
-    mod->finalizeParameters();
-    mod->buildInside();
-
-    // pre-initialize TraCIMobility
-    for (cModule::SubmoduleIterator iter(mod); !iter.end(); iter++) {
-        cModule* submod = iter();
-        StationaryMobility* mm = dynamic_cast<StationaryMobility*>(submod);
-        if (!mm) continue;
-        mm->par("initFromDisplayString") = false;
-        mm->par("initialX") = pos.x;
-        mm->par("initialY") = pos.y;
-        mm->par("initialZ") = 0;
-    }
-
-    mod->callInitialize();
-}
-
-void VACaMobil::generateRandomRsus(uint n)
-{
-    Coord omnetNetbounds1 = traci2omnet(netbounds1);
-    Coord omnetNetbounds2 = traci2omnet(netbounds2);
-    std::list<std::string> junctionList = commandGetJunctionIds();
-    std::list<Coord> junctionLocations;
-    for(std::list<std::string>::iterator i = junctionList.begin(); i != junctionList.end(); i++){
-        junctionLocations.push_back(commandGetJunctionPosition(*i));
-    }
-
-    for(uint i=0; i <n ; i++){
-        Coord desiredCoord;
-        desiredCoord.x = uniform(omnetNetbounds1.x, omnetNetbounds2.x);
-        desiredCoord.y = uniform(omnetNetbounds1.y, omnetNetbounds2.y);
-        Coord finalCoord = *junctionLocations.begin();
-        double minDistance = desiredCoord.distance(*junctionLocations.begin());
-        for(std::list<Coord>::iterator iter= ++junctionLocations.begin(); iter != junctionLocations.end(); iter++){
-            double distance = desiredCoord.distance(*iter);
-            if( distance< minDistance){
-                minDistance= distance;
-                finalCoord = *iter;
-            }
-        }
-        char name[20];
-        snprintf(name, sizeof(name), "randomRsu%d", i);
-        rsusLocation.push_back(finalCoord);
-        rsusNames.push_back(name);
-    }
-}
-
-void VACaMobil::placeRsus()
-{
-    ASSERT(rsusLocation.size() == rsusNames.size());
-    for(uint i = 0; i < rsusLocation.size(); i++){
-        std::string prefix = namePrefix;
-        createRsu(rsusLocation.at(i), prefix.append(rsusNames.at(i)));
-    }
 }
 
 void VACaMobil::updateHeatmaps(){

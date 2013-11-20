@@ -920,6 +920,14 @@ void TraCIScenarioManager::unsubscribeFromVehicleVariables(std::string vehicleId
 	ASSERT(buf.eof());
 }
 
+std::vector<Coord> TraCIScenarioManager::getNetBounds() const {
+    std::vector<Coord> omnetBounds;
+    omnetBounds.push_back(traci2omnet(netbounds1));
+    omnetBounds.push_back(traci2omnet(netbounds2));
+    return omnetBounds;
+
+}
+
 void TraCIScenarioManager::processSimSubscription(std::string objectId, TraCIBuffer& buf) {
     int carsAlreadyDeleted = 0;
     uint8_t variableNumber_resp; buf >> variableNumber_resp;

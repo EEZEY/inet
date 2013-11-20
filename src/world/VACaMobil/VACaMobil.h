@@ -90,12 +90,6 @@ public:
     std::map<std::string, std::list<std::string>* > *edges;
     std::set<Typerate, Comp> vehicles;
 
-    std::vector<Coord> rsusLocation;
-    std::vector<std::string> rsusNames;
-    std::string namePrefix;
-    uint nRandomRsu;
-    bool rsuInitialized;
-
     std::map<std::pair<int, int>, int > * heatmapArea;
     std::map<std::string, int > * heatmapRoads;
 
@@ -117,11 +111,6 @@ public:
     virtual std::string getNextRoute(void);
     virtual std::string getLaneName(std::string routeName);
     virtual std::list<std::string> getLaneNames(std::string routeName);
-
-    void parseRsu();
-    void createRsu(Coord pos, std::string name);
-    void generateRandomRsus(uint n);
-    void placeRsus();
 
     virtual void updateHeatmaps();
 
