@@ -54,7 +54,7 @@ public:
     virtual void handleMessage(cMessage *msg);
     virtual void finish();
   private:
-    int meanNumberOfCars;
+    int userMean;
     int carHysteresisValue;
     int warmUpSeconds;
     int vehicleSequenceId;
@@ -64,10 +64,10 @@ public:
     bool getStats;
 
     //Variables needed for normal adding cars function
-    uint32_t carsToAchieve;
-    int timeLimitToAdd;
+    uint32_t targetNumber;
+    double timeLimitToAdd;
     simtime_t lastDowntime;
-    bool goingDown;
+    bool tooManyCars;
 
 
     //Inter Arrival Time Mode related Variables
@@ -79,8 +79,8 @@ public:
 
     bool initialized;
 
-    int acumMedia;
-    int countMedia;
+    int totalActualMean;
+    int countActualMean;
 
     simsignal_t onSimulationCarsSignal;
     int onSimulationCars;
@@ -100,17 +100,17 @@ public:
     std::list<std::string> commandGetVehicleIds();
     Coord commandGetPosition(std::string nodeId);
 
-    virtual int isGoingToAddCar(void);
+    virtual int carsToAdd(void);
     virtual bool warmupPeriodAddCars(void);
-    bool AddCarsUntil(int finalTime, int carsToAddAtTheEnd);
+    bool AddCarsUntil(double finalTime, int carsToAddAtTheEnd);
 
     virtual bool addCar(void);
     virtual bool addCarWholeMap(void);
-    virtual std::string getVehicleType(void);
-    virtual std::string getRouteName(void);
+    virtual std::string getRandomVehicleType(void);
+    virtual std::string getRandomRoute(void);
     virtual std::string getNextRoute(void);
-    virtual std::string getLaneName(std::string routeName);
-    virtual std::list<std::string> getLaneNames(std::string routeName);
+     virtual std::string getRandomLaneFromRoute(std::string routeName);
+    virtual std::list<std::string> getFirstEdgeLanes(std::string routeName);
 
     virtual void updateHeatmaps();
 

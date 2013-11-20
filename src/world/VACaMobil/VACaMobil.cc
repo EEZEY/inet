@@ -39,10 +39,11 @@ void VACaMobil::initialize(int stage)
     if(stage == 1){
         vehicleSequenceId = 0;
         lastReturnedRoute = 0;
-        carsToAchieve = 0;
+        targetNumber = 0;
         initialized = false;
         lastDowntime = simTime();
 
+        RandomMode = false;
         const char *ModeStr = par("chooseVACaMobilMode").stringValue();
         int Mode = cEnum::get("ChooseVACaMobilMode")->lookup(ModeStr);
 
@@ -52,13 +53,14 @@ void VACaMobil::initialize(int stage)
             RandomMode = true;
         }
 
+        RandomAddVehicle = NULL;
+
         if(RandomMode) {
-            RandomAddVehicle = NULL;
             RandomAddVehicle = new cMessage("AddVehicle");
         }
 
-        acumMedia = 0;
-        countMedia = 0;
+        totalActualMean = 0;
+        countActualMean = 0;
         getStats = par("getStatistics").boolValue();
 
         if(getStats){
@@ -67,28 +69,28 @@ void VACaMobil::initialize(int stage)
         }
 
         vRates = par("vehicleRates").stdstringValue().c_str();
-        meanNumberOfCars = (int) par("meanNumberOfCars").doubleValue();
-        meanNumberOfCars = (meanNumberOfCars >= 0) ? meanNumberOfCars : 0;
+        userMean = (int) par("meanNumberOfCars").doubleValue();
+        userMean = (userMean >= 0) ? userMean : 0;
         carHysteresisValue = (int) par("carHysteresisValue").doubleValue();
         carHysteresisValue = (carHysteresisValue >= 0) ? carHysteresisValue : 0;
 
         doNothing = par("doNothing").boolValue();
 
-        int minimalWarmupTime = (int) ceil(firstStepAt.dbl());
-        warmUpSeconds = (int) par("warmUpSeconds").doubleValue();
+        int minimalWarmupTime = firstStepAt.dbl();
+        warmUpSeconds = par("warmUpSeconds").doubleValue();
         if(warmUpSeconds < minimalWarmupTime){
-            warmUpSeconds = (int) simulation.getWarmupPeriod().dbl();
+            warmUpSeconds = simulation.getWarmupPeriod().dbl();
             if(warmUpSeconds < minimalWarmupTime){
                 warmUpSeconds = minimalWarmupTime;
             }
         }
-        goingDown = false;
+        tooManyCars = false;
 
         WATCH(activeVehicleCount);
         WATCH(onSimulationCars);
         WATCH(warmUpSeconds);
-        WATCH(carsToAchieve);
-        WATCH(goingDown);
+        WATCH(targetNumber);
+        WATCH(tooManyCars);
 
         onSimulationCarsSignal = registerSignal("onSimulationCarsSignal");
     }
@@ -120,26 +122,24 @@ void VACaMobil::handleMessage(cMessage *msg)
                 if(simTime() <= warmUpSeconds){
                     canAddCar = warmupPeriodAddCars();
                 } else {
-                    int numberOfCarsToAdd = isGoingToAddCar();
-                    if(numberOfCarsToAdd > 0){
-                        canAddCar = AddCarsUntil(0,meanNumberOfCars - carHysteresisValue);
-                        onSimulationCars = activeVehicleCount + teleportedVehiclesCount;
-                        canAddCar = AddCarsUntil(timeLimitToAdd, carsToAchieve);
-                    }
+                    int numberOfCarsToAdd = carsToAdd();
+                        if(numberOfCarsToAdd > 0){
+                        canAddCar = AddCarsUntil(0,userMean - carHysteresisValue);
+                            onSimulationCars = activeVehicleCount + teleportedVehiclesCount;
+                        canAddCar = AddCarsUntil(timeLimitToAdd, targetNumber);
+                        }
                 }
             }
-        }
-        onSimulationCars = activeVehicleCount + teleportedVehiclesCount;
-     //   ASSERT(onSimulationCars > meanNumberOfCars - carHysteresisValue);
-     //   ASSERT(onSimulationCars < meanNumberOfCars + carHysteresisValue);
-        acumMedia = acumMedia + onSimulationCars;
-        countMedia++;
-        emit(onSimulationCarsSignal, onSimulationCars);
+            onSimulationCars = activeVehicleCount + teleportedVehiclesCount;
+            ASSERT(!RandomMode || onSimulationCars >= (userMean - carHysteresisValue) || (onSimulationCars <= userMean + carHysteresisValue));
+            totalActualMean = totalActualMean + onSimulationCars;
+            countActualMean++;
+            emit(onSimulationCarsSignal, onSimulationCars);
 
-        if(simTime() > warmUpSeconds && getStats){
-            updateHeatmaps();
+            if(simTime() > warmUpSeconds && getStats){
+                updateHeatmaps();
+            }
         }
-
     }
     if(!RandomMode) {
         ASSERT2(canAddCar, "A new car cannot be added, check the number of routes");
@@ -154,7 +154,8 @@ void VACaMobil::retrieveInitialInformation(){
     routeNames.reserve(routeIds.size());
     routeNames.insert(routeNames.end(),routeIds.begin(),routeIds.end());
 
-    //printf("Recuperadas %d rutas\n", routeIds.size());
+    EV << "Found " << routeIds.size() << " routes"<< endl;
+
     routes = new std::map<std::string, std::list<std::string> >();
     for(std::list<std::string>::iterator it = routeIds.begin(); it != routeIds.end();it++){
         std::string route = *it;
@@ -190,7 +191,7 @@ void VACaMobil::retrieveInitialInformation(){
 }
 
 /*
- * Encapsulates all the vehicle retrieval information from parameters
+ * Get information from traci
  * Sorts vehicles by probability and also normalizes it.
  */
 void VACaMobil::retrieveVehicleInformation()
@@ -202,7 +203,7 @@ void VACaMobil::retrieveVehicleInformation()
         std::list<std::string> vehiclesTraCI = commandGetVehicleIds();
 
         if(debug) {
-            EV << "Recuperados "<< vehiclesTraCI.size() << " vehiculos."<< std::endl;
+            EV << "Found "<< vehiclesTraCI.size() << " vehicles."<< std::endl;
             EV << "VRATES " << vRates << std::endl;
         }
         double totalRate = 0;
@@ -227,7 +228,7 @@ void VACaMobil::retrieveVehicleInformation()
                    rate = strtod(token, &finalPtr);
                }
             }
-            printf("Vehiculo %s %f\n", type.c_str(), rate);
+        EV << "Vehicle"<< type.c_str()<< rate;
             vehicles.push_back(Typerate{type, rate});
             totalRate = totalRate + rate;
             it++;
@@ -296,107 +297,71 @@ std::list<std::string> VACaMobil::commandGetVehicleIds(){
  * This function returns the number of cars to add.
  * Linear probability of introducing a new car, directly related with the distance to the "meanCars - Hysteresis" value
  */
-int VACaMobil::isGoingToAddCar(void) {
-    int addCarCount = 0;
+int VACaMobil::carsToAdd(void) {
+    int newCars = 0;
 
-    uint32_t upperCarValue = meanNumberOfCars+carHysteresisValue;
-    uint32_t lowerCarValue = meanNumberOfCars-carHysteresisValue;
-    lowerCarValue = (0 > lowerCarValue) ? 0 : lowerCarValue;
+    uint32_t upperBound = userMean+carHysteresisValue;
+    uint32_t lowerBound = userMean-carHysteresisValue;
+    lowerBound = (0 > lowerBound) ? 0 : lowerBound;
 
     //This two ifs are the easy part as are deterministic.
-    bool conditionAchieved = false;
-    if(goingDown && (carsToAchieve >= (unsigned int)onSimulationCars)) {
-        conditionAchieved = true;
-    } else {
-        if(!goingDown && (carsToAchieve <= (unsigned int)onSimulationCars) ){
-            conditionAchieved = true;
+    bool getNewTarget;
+    if(tooManyCars && (targetNumber >= (unsigned int)onSimulationCars)) {
+        getNewTarget = true;
         }
+    else if(!tooManyCars && (targetNumber <= (unsigned int)onSimulationCars)){
+            getNewTarget = true;
     }
 
-    if(conditionAchieved || carsToAchieve <= lowerCarValue) {
-        double myMeanNumberOfCars = meanNumberOfCars + (meanNumberOfCars - (acumMedia/(double) countMedia));
+    else{
+        getNewTarget = false;
+    }
+    
+    if(getNewTarget || targetNumber <= lowerBound) {
+        double actualMean = (totalActualMean/(double) countActualMean);
+        double biasedMean = userMean + (userMean - actualMean);//slightly biased mean, to quickly converge to desired values
 
-        carsToAchieve = (int)(normal(myMeanNumberOfCars, carHysteresisValue/3.0)+0.5); //Stdev is carHystereis divided by three to achieve a good number of cars inside the correct values.
+        targetNumber = (int)(normal(biasedMean, carHysteresisValue/3.0)+0.5); //+0.5 to round up, the number of vehicles must be an integer
 
-        carsToAchieve = (carsToAchieve > upperCarValue) ? upperCarValue : carsToAchieve;
-        carsToAchieve = (carsToAchieve < lowerCarValue) ? lowerCarValue : carsToAchieve;
+        targetNumber = (targetNumber > upperBound) ? upperBound : targetNumber;
+        targetNumber = (targetNumber < lowerBound) ? lowerBound : targetNumber;
 
-        int extraTime = (int)floor(simTime().dbl() - lastDowntime.dbl());
-        extraTime = (extraTime < 1) ? 1 : extraTime;
-        timeLimitToAdd = (int)ceil(simTime().dbl()) + extraTime;
 
-        addCarCount = carsToAchieve - onSimulationCars;
+        double intervalDuration = simTime().dbl() - lastDowntime.dbl();//Get the last "idle" interval duration
+        timeLimitToAdd = simTime().dbl() + intervalDuration;
+
+        newCars = targetNumber - onSimulationCars;
 
         lastDowntime = simTime();
-        goingDown = (addCarCount < 0);
-
-        //std::cout << "Cars to Achieve " << carsToAchieve << " addCarCount "<< addCarCount << std::endl;
-
+        tooManyCars = (newCars < 0);
     } else {
-        addCarCount = carsToAchieve - onSimulationCars;
+        newCars = targetNumber - onSimulationCars;
     }
-    //std::cout << "Cars to Achieve " << carsToAchieve << " addCarCount "<< addCarCount << " On simulation cars " << onSimulationCars << " VehicleCount "<< activeVehicleCount << " Teleported "<< teleportedVehiclesCount << std::endl;
-
-
-    return addCarCount;
+    return newCars;
 }
-
-/*
-int CarGeneratorManager::isGoingToAddCar(void) {
-    int addCarCount = 0;
-
-    uint32_t upperCarValue = meanNumberOfCars+carHysteresisValue;
-    uint32_t lowerCarValue = meanNumberOfCars-carHysteresisValue;
-
-    //This two ifs are the easy part as are deterministic.
-    if(onSimulationCars >= upperCarValue) {
-        addCarCount = 0;
-    } else {
-        if(onSimulationCars <= lowerCarValue) {
-            addCarCount = lowerCarValue - onSimulationCars;
-        } else {
-            if(countMedia > 0 && meanNumberOfCars > acumMedia / countMedia){
-                int carEstimatedValue = onSimulationCars - lowerCarValue;
-
-                int probability = uniform(0,upperCarValue-lowerCarValue);
-
-                if(probability > carEstimatedValue) {
-                    addCarCount = 1;
-                } else {
-                    addCarCount = 0;
-                }
-            } else {
-                addCarCount = 0;
-            }
-        }
-    }
-
-    return addCarCount;
-}
-*/
 
 /*
  * This function adds the necessary cars at the warmup period
  */
 bool VACaMobil::warmupPeriodAddCars() {
 
-    return AddCarsUntil(warmUpSeconds, meanNumberOfCars);
+    return AddCarsUntil(warmUpSeconds, userMean);
 }
 
 /*
- * This function adds cars in a controlled way
+ * Add (objectiveNumber-currentNumberOfCars)/(finalTime-simTime()) cars every step between simTime and finalTime
  */
-bool VACaMobil::AddCarsUntil(int finalTime, int carsToAddAtTheEnd) {
+bool VACaMobil::AddCarsUntil(double finalTime, int objectiveNumber) {
     bool sucess = true;
 
     double remainingTime = finalTime - simTime().dbl();
-    int remainingCarsToAdd = carsToAddAtTheEnd - onSimulationCars;
+    int remainingCarsToAdd = objectiveNumber - onSimulationCars;
 
     int carsToAdd;
     int steps;
-    steps = round(remainingTime / updateInterval.dbl());
+    steps = remainingTime / updateInterval.dbl();
     if(steps > 0) {
-        carsToAdd = round((remainingCarsToAdd)/steps);
+        carsToAdd = round((remainingCarsToAdd)/(double)steps);
     } else {
         carsToAdd = remainingCarsToAdd;
     }
@@ -410,7 +375,8 @@ bool VACaMobil::AddCarsUntil(int finalTime, int carsToAddAtTheEnd) {
 
 
 /*
- *Adds a car if there is a place in the map where it can be placed
+ * Add a new vehicle using any of the defined routes
+ * if not possible return false
  */
 bool VACaMobil::addCarWholeMap(void) {
     bool carAdded = false;
@@ -419,15 +385,15 @@ bool VACaMobil::addCarWholeMap(void) {
     sprintf(vehicleString,"vehicleRandom%d", ++vehicleSequenceId);
 
     //Get vehicleType
-    std::string actualType = getVehicleType();
+    std::string actualType = getRandomVehicleType();
 
-    std::string actualRoute = getRouteName();
+    EV << "Adding new vehicle: Type=" << actualType.c_str() << std::endl;
+    std::string actualRoute = getRandomRoute();
 
     int firstRoute = lastReturnedRoute;
     do {
-        std::list<std::string> lanes = getLaneNames(actualRoute);
+        std::list<std::string> lanes = getFirstEdgeLanes(actualRoute);
         for(std::list<std::string>::iterator laneIterator = lanes.begin(); laneIterator != lanes.end() && !carAdded; laneIterator++) {
-            EV << "TIPOVEHICULO  " << actualType.c_str() << std::endl;
             carAdded = TraCIScenarioManager::commandAddVehicle(vehicleString, actualType.c_str(), actualRoute.c_str(), laneIterator->c_str(), 0.0, 0.0);
         }
         actualRoute = getNextRoute();
@@ -438,8 +404,7 @@ bool VACaMobil::addCarWholeMap(void) {
 
 /*
  * Tries to add a car.
- * Returns true or false indicating whether if its successfull or not.
- * DEPRECATED
+ * Returns true or false indicating whether if it was successful or not.
  */
 bool VACaMobil::addCar()
 {
@@ -447,23 +412,23 @@ bool VACaMobil::addCar()
     sprintf(vehicleString,"vehicleRandom%d", ++vehicleSequenceId);
 
     //Get vehicleType
-    std::string actualType = getVehicleType();
+    std::string actualType = getRandomVehicleType();
 
     //Get route
-    std::string actualRoute = getRouteName();
+    std::string actualRoute = getRandomRoute();
 
     //Get lane
-    std::string actualLane = getLaneName(actualRoute);
+    std::string actualLane = getRandomLaneFromRoute(actualRoute);
 
     //Add car
     return TraCIScenarioManager::commandAddVehicle(vehicleString, actualType.c_str(), actualRoute.c_str(), actualLane.c_str(), 0.0, 0.0);
 }
 
 /*
- * Retuns the string containing the ID Name of one of the different vehicle types
+ * Returns the string containing the ID Name of one of the different vehicle types
  * considering the defined probabilities
  */
-std::string VACaMobil::getVehicleType(void)
+std::string VACaMobil::getRandomVehicleType(void)
 {
 
     double probability = uniform(0,1);
@@ -484,9 +449,9 @@ std::string VACaMobil::getVehicleType(void)
 }
 
 /*
- * Retuns the string containing the ID Name of one of the different routes
+ * Returns the string containing the ID Name of one of the different routes
  */
-std::string VACaMobil::getRouteName(void)
+std::string VACaMobil::getRandomRoute(void)
 {
     double probability = uniform(0,routeNames.size());
     int routeSelected = (int)probability % routeNames.size();
@@ -507,11 +472,11 @@ std::string VACaMobil::getNextRoute(void) {
 }
 
 /*
- * Retuns the string containing the ID Name of one lane at the first edge of the route "routeName"
+ * Returns the string containing the ID Name of one lane at the first edge of the route "routeName"
  */
-std::string VACaMobil::getLaneName(std::string routeName)
+std::string VACaMobil::getRandomLaneFromRoute(std::string routeName)
 {
-    std::list<std::string> lanes = getLaneNames(routeName);
+    std::list<std::string> lanes = getFirstEdgeLanes(routeName);
 
     int laneNumber = lanes.size();
 
@@ -533,7 +498,7 @@ std::string VACaMobil::getLaneName(std::string routeName)
 /*
  * Returns a list of lane Ids corresponding to the first edge of the route
  */
-std::list<std::string> VACaMobil::getLaneNames(std::string routeName) {
+std::list<std::string> VACaMobil::getFirstEdgeLanes(std::string routeName) {
     std::string firstEdge = routes->find(routeName)->second.front();
     std::list<std::string> lanes = *(edges->find(firstEdge)->second);
 
