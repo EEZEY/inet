@@ -84,10 +84,12 @@ void HostAutoConfigurator::setupNetworkLayer()
             EV << "interface " << ifname << " skipped (is loopback)" << std::endl;
             continue;
         }
+        /*Adds support for up to 20 interfaces*/
+        IPv4Address interfaceAddr = IPv4Address(myAddress.getInt() + uint32(ie->getInterfaceId())%20);
 
-        EV << "interface " << ifname << " gets " << myAddress.str() << "/" << netmask.str() << std::endl;
+        EV << "interface " << ifname << " gets " << interfaceAddr.str() << "/" << netmask.str() << std::endl;
 
-        ie->ipv4Data()->setIPAddress(myAddress);
+        ie->ipv4Data()->setIPAddress(interfaceAddr);
         ie->ipv4Data()->setNetmask(netmask);
         ie->setBroadcast(true);
 
