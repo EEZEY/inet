@@ -18,9 +18,6 @@
 #include <iostream>
 #include <fstream>
 #include "StationaryMobility.h"
-#define DENSITY 1
-#define HEATMAP_AREA "area.dat"
-#define HEATMAP_ROADS "roads.dat"
 
 
 EXECUTE_ON_STARTUP(
@@ -61,13 +58,6 @@ void VACaMobil::initialize(int stage)
 
         totalActualMean = 0;
         countActualMean = 0;
-        getStats = par("getStatistics").boolValue();
-
-        if(getStats){
-            heatmapArea = new std::map<std::pair<int, int>, int >();
-            heatmapRoads = new std::map<std::string, int >();
-        }
-
         vRates = par("vehicleRates").stdstringValue().c_str();
         userMean = (int) par("meanNumberOfCars").doubleValue();
         userMean = (userMean >= 0) ? userMean : 0;
@@ -135,11 +125,8 @@ void VACaMobil::handleMessage(cMessage *msg)
             totalActualMean = totalActualMean + onSimulationCars;
             countActualMean++;
             emit(onSimulationCarsSignal, onSimulationCars);
-
-            if(simTime() > warmUpSeconds && getStats){
-                updateHeatmaps();
-            }
         }
+        notifyUpdates();
     }
     if(!RandomMode) {
         ASSERT2(canAddCar, "A new car cannot be added, check the number of routes");
@@ -249,30 +236,6 @@ void VACaMobil::retrieveVehicleInformation()
             Typerate aux = *itaux;
             EV << "Vehiculo " << aux.type.c_str() <<" "<< aux.rate << std::endl;
         }
-}
-
-void VACaMobil::updateHeatmaps(){
-    std::map<std::string, cModule*>::iterator it;
-    for(it = hosts.begin(); it != hosts.end(); it++){
-        std::string id = it->first;
-        //Roads
-        std::string currentEdge = this->commandGetEdgeId(id);
-        std::map<std::string,  int >::iterator eit = this->heatmapRoads->find(currentEdge);
-        if(eit != this->heatmapRoads->end()){
-            eit->second++;
-        } else {
-            this->heatmapRoads->insert(std::make_pair(currentEdge, 1));
-        }
-        //Area
-        Coord pos = this->commandGetPosition(id);
-        std::pair<int,int> currentij = std::make_pair(pos.x / DENSITY, pos.y / DENSITY);
-        std::map<std::pair<int,int>,  int >::iterator ait = this->heatmapArea->find(currentij);
-        if(ait != this->heatmapArea->end()){
-            ait->second++;
-        } else {
-            this->heatmapArea->insert(std::make_pair(currentij, 1));
-        }
-    }
 }
 
 Coord VACaMobil::commandGetPosition(std::string nodeId) {
@@ -511,24 +474,10 @@ void VACaMobil::finish(){
         RandomAddVehicle = NULL;
     }
     TraCIScenarioManagerLaunchd::finish();
-    if(getStats){
-        std::string prefix = par("statFiles").stringValue();
-        std::ofstream f1(prefix.append(HEATMAP_ROADS).c_str());
-        std::map<std::string, int >::iterator eit;
-        for(eit = this->heatmapRoads->begin(); eit != this->heatmapRoads->end(); eit++){
-            f1 << eit->first << " " << eit->second << endl;
-        }
-        f1.close();
-
-        prefix = par("statFiles").stringValue();
-        std::ofstream f2(prefix.append(HEATMAP_AREA).c_str());
-        std::map<std::pair<int, int>, int >::iterator ait;
-        for(ait= this->heatmapArea->begin(); ait != this->heatmapArea->end(); ait++){
-            for(int i=0; i< ait->second; i++){
-                f2 << ait->first.first << " " << ait->first.second << endl;
-            }
-        }
-        f2.close();
-    }
 }
 
+void VACaMobil::notifyUpdates(void) {
+    for(std::list<MobilitySubscriber*>::iterator i = subscriberList.begin(); i != subscriberList.end(); i++){
+            (*i)->onMobilityUpdated(hosts);
+        }
+}

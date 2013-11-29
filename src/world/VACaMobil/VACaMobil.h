@@ -37,6 +37,14 @@ class Comp {
         }
 };
 
+class MobilitySubscriber
+{
+    public:
+        virtual ~MobilitySubscriber(){};
+
+        virtual void onMobilityUpdated(std::map<std::string, cModule*> hosts) = 0;
+};
+
 /**
  * Constant car generator.
  */
@@ -47,13 +55,20 @@ public:
     {
         STEADYSTATE = 1, RANDOM
     };
-
+    void subscribeUpdates(MobilitySubscriber* subscriber){
+        Enter_Method_Silent();
+        subscriberList.push_back(subscriber);
+    }
+    void unSubscribeUpdates(MobilitySubscriber* subscriber){
+        subscriberList.remove(subscriber);
+    }
   protected:
     virtual int numInitStages() const { return std::max(TraCIScenarioManagerLaunchd::numInitStages(), 2); }
     virtual void initialize(int stage);
     virtual void handleMessage(cMessage *msg);
     virtual void finish();
   private:
+
     int userMean;
     int carHysteresisValue;
     int warmUpSeconds;
@@ -61,8 +76,6 @@ public:
     int addCarRetryValue;
     int lastReturnedRoute;
     bool doNothing;
-    bool getStats;
-
     //Variables needed for normal adding cars function
     uint32_t targetNumber;
     double timeLimitToAdd;
@@ -90,9 +103,6 @@ public:
     std::map<std::string, std::list<std::string>* > *edges;
     std::set<Typerate, Comp> vehicles;
 
-    std::map<std::pair<int, int>, int > * heatmapArea;
-    std::map<std::string, int > * heatmapRoads;
-
     void retrieveInitialInformation();
     void retrieveVehicleInformation();
 
@@ -109,12 +119,11 @@ public:
     virtual std::string getRandomVehicleType(void);
     virtual std::string getRandomRoute(void);
     virtual std::string getNextRoute(void);
-     virtual std::string getRandomLaneFromRoute(std::string routeName);
+    virtual std::string getRandomLaneFromRoute(std::string routeName);
     virtual std::list<std::string> getFirstEdgeLanes(std::string routeName);
 
-    virtual void updateHeatmaps();
-
-
+    std::list<MobilitySubscriber*> subscriberList;
+    virtual void notifyUpdates(void);
 };
 
 class VACaMobilAccess : public ModuleAccess<VACaMobil>
