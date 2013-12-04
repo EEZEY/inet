@@ -57,6 +57,33 @@ void MovStats::onMobilityUpdated(std::map<std::string, cModule*> hosts){
         } else {
             this->heatmapRoads.insert(std::make_pair(currentEdge, 1));
         }
+
+        std::map<std::string,  std::string >::iterator it2 = this->previousRoad.find(id);
+        bool add = false;
+        if( it2 == previousRoad.end() ) {
+            /*
+             * Add the new node
+             */
+            previousRoad.insert(std::make_pair(id,currentEdge));
+            add = true;
+        }
+        else {
+            add = it2->second != currentEdge;
+            if( add ) {
+                it2->second = currentEdge;
+            }
+        }
+
+        if( add ){
+            eit = roadCarCounter.find(currentEdge);
+            if(eit != roadCarCounter.end()){
+                eit->second++;
+            }
+            else{
+                this->roadCarCounter.insert(std::make_pair(currentEdge, 1));
+            }
+        }
+
         //Area
         MobilityBase *mob = dynamic_cast<MobilityBase*>(it->second->getModuleByPath(("."+mobModuleName).c_str()));
 
@@ -76,7 +103,7 @@ void MovStats::finish() {
     std::ofstream f1((prefix+HEATMAP_ROADS).c_str(),std::ios_base::out);
     std::map<std::string, int >::iterator eit;
     for(eit = this->heatmapRoads.begin(); eit != this->heatmapRoads.end(); eit++){
-        f1 << eit->first << " " << eit->second << endl;
+        f1 << eit->first << " " << eit->second << " " << roadCarCounter.at(eit->first) << endl;
     }
     f1.close();
 

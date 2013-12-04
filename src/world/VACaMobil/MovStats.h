@@ -35,7 +35,8 @@ private:
     VACaMobil *manager;
     std::map<std::pair<int, int>, int > heatmapArea;
     std::map<std::string, int > heatmapRoads;
-
+    std::map<std::string, int > roadCarCounter;
+    std::map<std::string, std::string> previousRoad;
 };
 
 #endif /* MOVSTATS_H_ */
