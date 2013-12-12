@@ -81,8 +81,7 @@ void RSUManager::parseRsu()
 
         Coord omnetLoc = manager->traci2omnet(TraCIScenarioManager::TraCICoord(x,y));
 
-        rsusLocation.push_back(omnetLoc);
-        rsusNames.push_back(id);
+        this->rsusList.push_back({omnetLoc, id});
     }
 }
 
@@ -134,16 +133,19 @@ void RSUManager::generateRandomRsus(uint n)
         }
         char name[20];
         snprintf(name, sizeof(name), "randomRsu%d", i);
-        rsusLocation.push_back(finalCoord);
-        rsusNames.push_back(name);
+        rsusList.push_back({finalCoord,name});
+        randomRsusList.push_back({finalCoord,name});
     }
+}
+
+std::vector<std::pair<Coord, std::string> > RSUManager::getRandomRsusList() {
+    return randomRsusList;
 }
 
 void RSUManager::placeRsu()
 {
-    ASSERT(rsusLocation.size() == rsusNames.size());
-    for(uint i = 0; i < rsusLocation.size(); i++){
+    for(uint i = 0; i < rsusList.size(); i++){
         std::string prefix = namePrefix;
-        createRsu(rsusLocation.at(i), prefix.append(rsusNames.at(i)));
+        createRsu(rsusList.at(i).first, prefix.append(rsusList.at(i).second));
     }
 }

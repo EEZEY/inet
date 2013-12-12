@@ -24,13 +24,14 @@ class RSUManager: public cSimpleModule {
 public:
     RSUManager();
     virtual ~RSUManager();
+    std::vector<std::pair<Coord, std::string> > getRandomRsusList();
 protected:
   virtual int numInitStages() const { return 3; }
   virtual void initialize(int stage);
   virtual void handleMessage(cMessage *msg);
 private:
-  std::vector<Coord> rsusLocation;
-  std::vector<std::string> rsusNames;
+  std::vector<std::pair<Coord, std::string> > rsusList;
+  std::vector<std::pair<Coord, std::string> > randomRsusList;
   TraCIScenarioManager *manager;
   uint nRandomRsu;
   std::string namePrefix;
