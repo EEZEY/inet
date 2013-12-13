@@ -37,4 +37,6 @@ simple RSUManager
     string rsuModule = default(""); //The omnetpp module of RSU.
     string rsuPrefix = default(""); //The omnetpp module of RSU.
     int nRandomRsu = default(0); //number of RSU place randomly in joints.
+    @signal[nTotalRSUsSignal];
+    @statistic[nTotalRSUs](title="Number of RSUs";source="nTotalRSUsSignal";record=mean);
 }

@@ -38,6 +38,7 @@ void RSUManager::initialize(int stage) {
     manager = TraCIScenarioManagerAccess().get();
     start = new cMessage("initialize");
     scheduleAt(manager->getFirstStepAt(),start);
+    nTotalRSUsSignal=registerSignal("nTotalRSUsSignal");
 }
 
 void RSUManager::handleMessage(cMessage* msg) {
@@ -144,6 +145,7 @@ std::vector<std::pair<Coord, std::string> > RSUManager::getRandomRsusList() {
 
 void RSUManager::placeRsu()
 {
+    emit(nTotalRSUsSignal, rsusList.size());
     for(uint i = 0; i < rsusList.size(); i++){
         std::string prefix = namePrefix;
         createRsu(rsusList.at(i).first, prefix.append(rsusList.at(i).second));

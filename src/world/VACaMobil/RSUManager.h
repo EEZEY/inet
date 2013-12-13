@@ -37,6 +37,7 @@ private:
   std::string namePrefix;
   cMessage *start;
   bool rsuInitialized;
+  simsignal_t nTotalRSUsSignal;
   void parseRsu();
   void createRsu(Coord pos, std::string name);
   void generateRandomRsus(uint n);
