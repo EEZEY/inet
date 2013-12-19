@@ -166,10 +166,15 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
     size_t fromCol = std::max(0, int(bboxP1.y / GRIDCELL_SIZE));
     size_t toCol = std::max(0, int(bboxP2.y / GRIDCELL_SIZE));
 
+    double step = (toCol != fromCol)?double(toRow - fromRow) / double(toCol - fromCol):-1;
+
     std::set<Obstacle*> processedObstacles;
     for (size_t col = fromCol; col <= toCol; ++col) {
         if (col >= obstacles.size()) break;
-        for (size_t row = fromRow; row <= toRow; ++row) {
+        size_t diff = col - fromCol;
+        uint minRow = (step != -1) ? std::max(fromRow, fromRow + uint((diff-1)*step)) : fromRow;
+        uint maxRow = (step != -1) ? std::min(toRow, fromRow + uint(ceil((diff+1)*step))) : toRow;
+        for (size_t row = minRow; row <= maxRow ; ++row) {
             if (row >= obstacles[col].size()) break;
             const ObstacleGridCell& cell = (obstacles[col])[row];
             for (ObstacleGridCell::const_iterator k = cell.begin(); k != cell.end(); ++k) {

@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#This script is unsed with VACaMobil to generate a file containing random routes.
 NETFILE="";
 ROUTEFILE="";
 NROUTES=5000;

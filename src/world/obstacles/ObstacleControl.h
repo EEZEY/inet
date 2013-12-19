@@ -94,7 +94,7 @@ class INET_API ObstacleControl : public cSimpleModule
             }
         };
 
-        enum { GRIDCELL_SIZE = 1024 };
+        enum { GRIDCELL_SIZE = 128 };
 
         typedef std::list<Obstacle*> ObstacleGridCell;
         typedef std::vector<ObstacleGridCell> ObstacleGridRow;
