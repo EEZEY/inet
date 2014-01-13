@@ -54,7 +54,7 @@ class INET_API ObstacleControl : public cSimpleModule
         /**
          * calculate additional attenuation by obstacles, return signal strength
          */
-        double calculateReceivedPower(double pSend, double carrierFrequency, const Coord& senderPos, double senderAngle, const Coord& receiverPos, double receiverAngle) const;
+        double calculateReceivedPower(double pSend, double carrierFrequency, const Coord& senderPos, double senderAngle, const Coord& receiverPos, double receiverAngle);
 
     protected:
         struct CacheKey {
@@ -94,7 +94,7 @@ class INET_API ObstacleControl : public cSimpleModule
             }
         };
 
-        enum { GRIDCELL_SIZE = 128 };
+        enum { GRIDCELL_SIZE = 1024 };
 
         typedef std::list<Obstacle*> ObstacleGridCell;
         typedef std::vector<ObstacleGridCell> ObstacleGridRow;
@@ -107,7 +107,45 @@ class INET_API ObstacleControl : public cSimpleModule
         Obstacles obstacles;
         AnnotationManager* annotations;
         AnnotationManager::Group* annotationGroup;
+
+        /*Experimental cache: GRC implementation */
+        struct StaticCacheKey {
+            const u_int senderXCell;
+            const u_int senderYCell;
+            const u_int rcvXCell;
+            const u_int rcvYCell;
+            StaticCacheKey(u_int sXC, u_int sYC, u_int rXC, u_int rYC):
+                senderXCell(sXC),
+                senderYCell(sYC),
+                rcvXCell(rXC),
+                rcvYCell(rYC){
+                }
+            bool operator<(const StaticCacheKey& o) const{
+                if(senderXCell < o.senderXCell) return true;
+                if(senderXCell > o.senderXCell) return false;
+                if(senderYCell < o.senderYCell) return true;
+                if(senderYCell > o.senderYCell) return false;
+                if(rcvXCell < o.rcvXCell) return true;
+                if(rcvXCell > o.rcvXCell) return false;
+                if(rcvYCell < o.rcvYCell) return true;
+                if(rcvYCell > o.rcvYCell) return false;
+                return false;
+            }
+        };
+
+        bool useStaticCache; /*whether to use this cache or not */
+        u_int staticCacheSize; /*maximum size of the cache in elements*/
+        float staticGridSize; /*longitude of the side of the square that forms the cache grid*/
+        bool managerInitialized;
+        /*
+         * the static cache contains the attenuation between two cells defined by their X and Y cell number
+         * map< pair< pair<sourceX,sourceY>, pair< destX, destY> >, double>
+         */
+        mutable std::map<StaticCacheKey, double > staticCache;
+
         mutable CacheEntries cacheEntries;
+        simsignal_t obstacleHit;
+        simsignal_t cacheGridSize;
 };
 
 class ObstacleControlAccess

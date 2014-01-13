@@ -27,7 +27,13 @@ simple ObstacleControl
     parameters:
         bool debug = default(false);  // emit debug messages?
         xml obstacles = default(xml("<obstacles/>")); // obstacles to add at startup
+        bool useCache = default(false);
+        int maxCacheSize = default(4e6);
         @display("i=misc/town");
+        @signal[obstacleHit](type="double");
+        @statistic[ObstacleHit](title="Attenuation due to obstacles";source="obstacleHit"; record=count, sum, vector);
+        @signal[cacheGridSize](type="double");
+        @statistic[CacheGridSize](title="Size of the cache grid";source="cacheGridSize"; record=sum);
         @labels(node);
 }
 

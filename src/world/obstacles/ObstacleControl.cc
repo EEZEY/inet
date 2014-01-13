@@ -22,7 +22,8 @@
 #include <set>
 
 #include "world/obstacles/ObstacleControl.h"
-
+#include "TraCIScenarioManager.h"
+#include "Coord.h"
 
 Define_Module(ObstacleControl);
 
@@ -43,6 +44,12 @@ void ObstacleControl::initialize(int stage) {
         obstaclesXml = par("obstacles");
 
         addFromXml(obstaclesXml);
+
+        useStaticCache = par("useCache").boolValue();
+        staticCacheSize = par("maxCacheSize").longValue();
+        managerInitialized = false;
+        cacheGridSize = registerSignal("cacheGridSize");
+        obstacleHit = registerSignal("obstacleHit");
     }
 }
 
@@ -149,13 +156,53 @@ void ObstacleControl::erase(const Obstacle* obstacle) {
     cacheEntries.clear();
 }
 
-double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequency, const Coord& senderPos, double senderAngle, const Coord& receiverPos, double receiverAngle) const {
+double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequency, const Coord& senderPos, double senderAngle, const Coord& receiverPos, double receiverAngle){
     Enter_Method_Silent();
+
+    if(useStaticCache && staticCacheSize != 0 && !managerInitialized ){
+        /*In order to get the network bounds, TraciScenarioManager should exist*/
+        TraCIScenarioManager *manager = TraCIScenarioManagerAccess().get();
+        ASSERT(manager->initialized());
+        std::vector<Coord> netBounds = manager->getNetBounds();
+        double xSize = abs(netBounds[0].x - netBounds[1].x);
+        double ySize = abs(netBounds[0].y - netBounds[1].y);
+        staticGridSize = xSize*ySize/staticCacheSize;
+        managerInitialized = true;
+        emit(cacheGridSize, staticGridSize);
+    }
 
     // return cached result, if available
     CacheKey cacheKey(pSend, carrierFrequency, senderPos, senderAngle, receiverPos, receiverAngle);
     CacheEntries::const_iterator cacheEntryIter = cacheEntries.find(cacheKey);
-    if (cacheEntryIter != cacheEntries.end()) return cacheEntryIter->second;
+    if (cacheEntryIter != cacheEntries.end()){
+        if(pSend != cacheEntryIter->second){
+            emit(obstacleHit, cacheEntryIter->second);
+        }
+        return cacheEntryIter->second;
+    }
+
+    /*
+     * Check the staticCache
+     */
+    double pInit = pSend;
+    if(useStaticCache){
+        StaticCacheKey key = StaticCacheKey(senderPos.x/staticGridSize,
+                                            senderPos.y/staticGridSize,
+                                            receiverPos.x/staticGridSize,
+                                            receiverPos.y/staticGridSize);
+
+        if(staticCache.find(key) != staticCache.end()){
+            /*
+             * The entry exists in cache
+             */
+            double attenuation = staticCache.at(key);
+            pSend = pSend * pow(10.0, - attenuation/10.0);
+            if(attenuation < 0){
+                emit(obstacleHit, pSend);
+            }
+            return pSend;
+        }
+    }
 
     // calculate bounding box of transmission
     Coord bboxP1 = Coord(std::min(senderPos.x, receiverPos.x), std::min(senderPos.y, receiverPos.y));
@@ -207,6 +254,16 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
     // cache result
     if (cacheEntries.size() >= 1000) cacheEntries.clear();
     cacheEntries[cacheKey] = pSend;
+
+    if(useStaticCache){
+        StaticCacheKey key = StaticCacheKey(senderPos.x/staticGridSize, senderPos.y/staticGridSize, receiverPos.x/staticGridSize, receiverPos.y/staticGridSize);
+        double attenuation = -10*log(pInit/pSend);
+        staticCache[key] = attenuation;
+    }
+
+    if(pSend != pInit){
+        emit(obstacleHit, pSend);
+    }
 
     return pSend;
 }
