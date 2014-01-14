@@ -145,7 +145,7 @@ class INET_API ObstacleControl : public cSimpleModule
 
         mutable CacheEntries cacheEntries;
         simsignal_t obstacleHit;
-        simsignal_t cacheGridSize;
+        simsignal_t staticCacheHit;
 };
 
 class ObstacleControlAccess

@@ -221,7 +221,7 @@ void UDPBasicApp::processPacket(cPacket *pk)
 
 bool UDPBasicApp::startApp(IDoneCallback *doneCallback)
 {
-    simtime_t start = std::max(startTime, simTime());
+    simtime_t start = simTime()+startTime;
     if ((stopTime < SIMTIME_ZERO) || (start < stopTime) || (start == stopTime && startTime == stopTime))
     {
         selfMsg->setKind(START);

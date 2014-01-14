@@ -46,10 +46,10 @@ void ObstacleControl::initialize(int stage) {
         addFromXml(obstaclesXml);
 
         useStaticCache = par("useCache").boolValue();
-        staticCacheSize = par("maxCacheSize").longValue();
         managerInitialized = false;
-        cacheGridSize = registerSignal("cacheGridSize");
         obstacleHit = registerSignal("obstacleHit");
+        staticCacheHit = registerSignal("staticCacheHit");
+        staticGridSize = par("cacheGridSize").doubleValue();
     }
 }
 
@@ -159,25 +159,13 @@ void ObstacleControl::erase(const Obstacle* obstacle) {
 double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequency, const Coord& senderPos, double senderAngle, const Coord& receiverPos, double receiverAngle){
     Enter_Method_Silent();
 
-    if(useStaticCache && staticCacheSize != 0 && !managerInitialized ){
-        /*In order to get the network bounds, TraciScenarioManager should exist*/
-        TraCIScenarioManager *manager = TraCIScenarioManagerAccess().get();
-        ASSERT(manager->initialized());
-        std::vector<Coord> netBounds = manager->getNetBounds();
-        double xSize = abs(netBounds[0].x - netBounds[1].x);
-        double ySize = abs(netBounds[0].y - netBounds[1].y);
-        staticGridSize = xSize*ySize/staticCacheSize;
-        managerInitialized = true;
-        emit(cacheGridSize, staticGridSize);
-    }
-
     // return cached result, if available
     CacheKey cacheKey(pSend, carrierFrequency, senderPos, senderAngle, receiverPos, receiverAngle);
     CacheEntries::const_iterator cacheEntryIter = cacheEntries.find(cacheKey);
     if (cacheEntryIter != cacheEntries.end()){
-        if(pSend != cacheEntryIter->second){
-            emit(obstacleHit, cacheEntryIter->second);
-        }
+
+        emit(obstacleHit, cacheEntryIter->second);
+
         return cacheEntryIter->second;
     }
 
@@ -197,9 +185,8 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
              */
             double attenuation = staticCache.at(key);
             pSend = pSend * pow(10.0, - attenuation/10.0);
-            if(attenuation < 0){
-                emit(obstacleHit, pSend);
-            }
+            emit(obstacleHit, pSend);
+
             return pSend;
         }
     }
@@ -261,9 +248,7 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
         staticCache[key] = attenuation;
     }
 
-    if(pSend != pInit){
-        emit(obstacleHit, pSend);
-    }
 
+    emit(obstacleHit, pSend);
     return pSend;
 }

@@ -45,7 +45,7 @@ module Car
                 @display("p=140,462");
         }
         ac_wlan: HostAutoConfigurator {
-            @display("p=296,402");
+            @display("p=60,398");
         }
         interfaceTable: InterfaceTable {
             parameters:
