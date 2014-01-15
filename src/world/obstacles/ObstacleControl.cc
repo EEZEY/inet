@@ -184,9 +184,9 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
              * The entry exists in cache
              */
             double attenuation = staticCache.at(key);
-            pSend = pSend * pow(10.0, - attenuation/10.0);
+            pSend = pSend * attenuation;
             emit(obstacleHit, pSend);
-
+            emit(staticCacheHit, pSend);
             return pSend;
         }
     }
@@ -244,7 +244,7 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
 
     if(useStaticCache){
         StaticCacheKey key = StaticCacheKey(senderPos.x/staticGridSize, senderPos.y/staticGridSize, receiverPos.x/staticGridSize, receiverPos.y/staticGridSize);
-        double attenuation = -10*log(pInit/pSend);
+        double attenuation = pInit/pSend;
         staticCache[key] = attenuation;
     }
 
