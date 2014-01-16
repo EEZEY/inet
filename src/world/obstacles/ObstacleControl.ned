@@ -35,7 +35,7 @@ simple ObstacleControl
         @signal[cacheGridSize](type="double");
         @statistic[CacheGridSize](title="Size of the cache grid";source="cacheGridSize"; record=sum);
         @signal[staticCacheHit](type="double");
-        @statistic[StaticCacheHit](title="Number of times the cache was hit";source="cacheGridSize"; record=count);
+        @statistic[StaticCacheHit](title="Number of times the cache was hit";source="staticCacheHit"; record=count);
         @labels(node);
 }
 

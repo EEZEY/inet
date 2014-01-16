@@ -244,7 +244,7 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
 
     if(useStaticCache){
         StaticCacheKey key = StaticCacheKey(senderPos.x/staticGridSize, senderPos.y/staticGridSize, receiverPos.x/staticGridSize, receiverPos.y/staticGridSize);
-        double attenuation = pInit/pSend;
+        double attenuation = pSend/pInit;
         staticCache[key] = attenuation;
     }
 
