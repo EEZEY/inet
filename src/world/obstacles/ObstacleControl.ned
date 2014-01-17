@@ -32,8 +32,6 @@ simple ObstacleControl
         @display("i=misc/town");
         @signal[obstacleHit](type="double");
         @statistic[ObstacleHit](title="Attenuation due to obstacles";source="obstacleHit"; record=count, sum, vector);
-        @signal[cacheGridSize](type="double");
-        @statistic[CacheGridSize](title="Size of the cache grid";source="cacheGridSize"; record=sum);
         @signal[staticCacheHit](type="double");
         @statistic[StaticCacheHit](title="Number of times the cache was hit";source="staticCacheHit"; record=count);
         @labels(node);
