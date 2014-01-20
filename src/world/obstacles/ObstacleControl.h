@@ -120,6 +120,11 @@ class INET_API ObstacleControl : public cSimpleModule
                 rcvXCell(rXC),
                 rcvYCell(rYC){
                 }
+
+            StaticCacheKey getSimetric(){
+                return StaticCacheKey(rcvXCell, rcvYCell, senderXCell, senderYCell);
+            }
+
             bool operator<(const StaticCacheKey& o) const{
                 if(senderXCell < o.senderXCell) return true;
                 if(senderXCell > o.senderXCell) return false;

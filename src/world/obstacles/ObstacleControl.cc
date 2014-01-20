@@ -179,7 +179,9 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
                                             receiverPos.x/staticGridSize,
                                             receiverPos.y/staticGridSize);
 
-        if(staticCache.find(key) != staticCache.end()){
+        StaticCacheKey simKey = key.getSimetric();
+
+        if(staticCache.find(key) != staticCache.end() || staticCache.find(simKey) != staticCache.end() ){
             /*
              * The entry exists in cache
              */
