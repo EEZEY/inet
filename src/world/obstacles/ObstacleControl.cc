@@ -178,14 +178,26 @@ double ObstacleControl::calculateReceivedPower(double pSend, double carrierFrequ
                                             senderPos.y/staticGridSize,
                                             receiverPos.x/staticGridSize,
                                             receiverPos.y/staticGridSize);
-
         StaticCacheKey simKey = key.getSimetric();
+        bool hit = false;
+        double attenuation;
 
-        if(staticCache.find(key) != staticCache.end() || staticCache.find(simKey) != staticCache.end() ){
+        if(staticCache.find(key) != staticCache.end()){
             /*
              * The entry exists in cache
              */
-            double attenuation = staticCache.at(key);
+            attenuation = staticCache.at(key);
+            hit = true;
+        }
+        else if(staticCache.find(simKey) != staticCache.end()){
+            /*
+             * The entry exists in cache
+             */
+            attenuation = staticCache.at(simKey);
+            hit = true;
+        }
+
+        if(hit){
             pSend = pSend * attenuation;
             emit(obstacleHit, pSend);
             emit(staticCacheHit, pSend);
