@@ -62,6 +62,9 @@ void UDPBasicApp::initialize(int stage)
         if (stopTime >= SIMTIME_ZERO && stopTime < startTime)
             error("Invalid startTime/stopTime parameters");
         selfMsg = new cMessage("sendTimer");
+        socket.setOutputGate(gate("udpOut"));
+        socket.bind(localPort);
+        setSocketOptions();
     }
 }
 
@@ -123,10 +126,6 @@ void UDPBasicApp::sendPacket()
 
 void UDPBasicApp::processStart()
 {
-    socket.setOutputGate(gate("udpOut"));
-    socket.bind(localPort);
-    setSocketOptions();
-
     const char *destAddrs = par("destAddresses");
     cStringTokenizer tokenizer(destAddrs);
     const char *token;
