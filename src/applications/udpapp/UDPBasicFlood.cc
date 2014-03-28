@@ -212,19 +212,21 @@ void UDPBasicFlood::handleMessageWhenUp(cMessage *msg)
 
 void UDPBasicFlood::processPacket(cPacket *pk)
 {
-    emit(rcvdPkSignal, pk);
     EV << "Received packet: " << UDPSocket::getReceivedPacketInfo(pk) << endl;
     std::string msgName;
     msgName = pk->getName();
-    if(rcvdPk.find(msgName) == rcvdPk.end()){
+    std::pair<std::set<std::string>::iterator, bool> ret = rcvdPk.insert(msgName);
+    if(ret.second){
+        ASSERT(rcvdPk.find(msgName)!=rcvdPk.end());
         emit(sentPkSignal, pk);
         pk->removeControlInfo();
         socket.sendTo(pk, IPv4Address::ALLONES_ADDRESS, destPort);
+        emit(rcvdPkSignal, pk);
+        numReceived++;
     }
     else{
         delete pk;
     }
-    numReceived++;
 }
 
 bool UDPBasicFlood::startApp(IDoneCallback *doneCallback)
