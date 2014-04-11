@@ -51,14 +51,17 @@ namespace OPP_Global
    */
   std::string stripnonalnum(const char *s);
 
-#if OMNETPP_VERSION < 0x0403
   /**
-   * For compatibility with OMNeT++ versions earlier than 4.3.
-   * In OMNeT++ 4.3+ this is a cModule member function.
+   * Accepts a printf-like argument list, and returns the result in a string.
+   * The limit is 1024 chars.
    */
-  cModule *getModuleByPath(cModule *startModule, const char *path);
-#endif
+  std::string stringf(const char *fmt, ...);
 
+  /**
+   * Accepts a vprintf-like argument list, and returns the result in a string.
+   * The limit is 1024 chars.
+   */
+  std::string vstringf(const char *fmt, va_list& args);
 }
 
 #endif

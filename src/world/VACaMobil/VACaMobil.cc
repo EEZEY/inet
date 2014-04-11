@@ -189,10 +189,10 @@ void VACaMobil::retrieveVehicleInformation()
 
         std::list<std::string> vehiclesTraCI = commandGetVehicleIds();
 
-        if(debug) {
-            EV << "Found "<< vehiclesTraCI.size() << " vehicles."<< std::endl;
-            EV << "VRATES " << vRates << std::endl;
-        }
+
+        EV << "Found "<< vehiclesTraCI.size() << " vehicles."<< std::endl;
+        EV << "VRATES " << vRates << std::endl;
+
         double totalRate = 0;
         std::list<Typerate> vehicles;
         std::list<std::string>::iterator it = vehiclesTraCI.begin();

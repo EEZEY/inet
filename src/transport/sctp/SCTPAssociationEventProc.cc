@@ -34,7 +34,7 @@ void SCTPAssociation::process_ASSOCIATE(SCTPEventCode& event, SCTPCommand *sctpC
 
     SCTPOpenCommand *openCmd = check_and_cast<SCTPOpenCommand *>(sctpCommand);
 
-    ev<<"SCTPAssociationEventProc:process_ASSOCIATE\n";
+    EV<<"SCTPAssociationEventProc:process_ASSOCIATE\n";
 
     switch (fsm->getState())
     {
@@ -62,7 +62,7 @@ void SCTPAssociation::process_ASSOCIATE(SCTPEventCode& event, SCTPCommand *sctpC
         {
         localPort = sctpMain->getEphemeralPort();
         }
-        ev << "OPEN: " << lAddr << ":" << localPort << " --> " << rAddr << ":" << remotePort << "\n";
+        EV << "OPEN: " << lAddr << ":" << localPort << " --> " << rAddr << ":" << remotePort << "\n";
 
         sctpMain->updateSockPair(this, lAddr, rAddr, localPort, remotePort);
         state->localRwnd = (long)sctpMain->par("arwnd");
@@ -244,14 +244,16 @@ void SCTPAssociation::process_SEND(SCTPEventCode& event, SCTPCommand* sctpComman
     // ------ Set initial destination address -----------------------------
     if (sendCommand->getPrimary()) {
         if (sendCommand->getRemoteAddr() == IPvXAddress("0.0.0.0")) {
-            datMsg->setInitialDestination(remoteAddr);
+             if(state->allowCMT == false) {
+                 datMsg->setInitialDestination(remoteAddr);
+             } else {
+                 // Do not make a path decision for CMT yet!
+                 datMsg->setInitialDestination(remoteAddr);
+                // datMsg->setInitialDestination(IPvXAddress("0.0.0.0"));
+             }
+        } else {
+             datMsg->setInitialDestination(sendCommand->getRemoteAddr());
         }
-        else {
-            datMsg->setInitialDestination(sendCommand->getRemoteAddr());
-        }
-    }
-    else {
-        datMsg->setInitialDestination(state->getPrimaryPathIndex());
     }
 
     // ------ Optional padding and size calculations ----------------------
@@ -284,11 +286,11 @@ void SCTPAssociation::process_SEND(SCTPEventCode& event, SCTPCommand* sctpComman
         if ((state->appSendAllowed) &&
             (state->sendQueueLimit > 0) &&
             ((uint64)state->sendBuffer >= state->sendQueueLimit) ) {
-        	// If there are not enough messages that could be dropped,
-        	// the buffer is really full and the app has to be notified.
-        	if (state->queuedDroppableBytes < state->sendBuffer - state->sendQueueLimit) {
-            	sendIndicationToApp(SCTP_I_SENDQUEUE_FULL);
-            	state->appSendAllowed = false;
+            // If there are not enough messages that could be dropped,
+            // the buffer is really full and the app has to be notified.
+            if (state->queuedDroppableBytes < state->sendBuffer - state->sendQueueLimit) {
+                sendIndicationToApp(SCTP_I_SENDQUEUE_FULL);
+                state->appSendAllowed = false;
             }
         }
     }

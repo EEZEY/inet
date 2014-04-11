@@ -37,6 +37,7 @@
 
 Define_Module(ExtInterface);
 
+
 void ExtInterface::initialize(int stage)
 {
     MACBase::initialize(stage);
@@ -65,16 +66,16 @@ void ExtInterface::initialize(int stage)
         WATCH(numDropped);
 
         registerInterface();
-
+    }
+    else if (stage == 3)
+    {
         // if not connected, make it gray
         if (ev.isGUI() && !connected)
         {
             getDisplayString().setTagArg("i", 1, "#707070");
             getDisplayString().setTagArg("i", 2, "100");
         }
-    }
-    else if (stage == 3)
-    {
+
         // update display string when addresses have been autoconfigured etc.
         if (ev.isGUI())
             updateDisplayString();
@@ -145,7 +146,7 @@ void ExtInterface::handleMessage(cMessage *msg)
         {
             struct sockaddr_in addr;
             addr.sin_family = AF_INET;
-#if !defined(linux) && !defined(_WIN32)
+#if !defined(linux) && !defined(__linux) && !defined(_WIN32)
             addr.sin_len = sizeof(struct sockaddr_in);
 #endif
             addr.sin_port = 0;

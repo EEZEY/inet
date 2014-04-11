@@ -37,6 +37,7 @@
 #include "OLSR_state.h"
 #include "OLSR_rtable.h"
 #include "OLSR_repositories.h"
+#include "opp_utils.h"
 
 #include <map>
 #include <vector>
@@ -74,7 +75,7 @@
 #define CURRENT_TIME_T  SIMTIME_DBL(simTime())
 #endif
 
-#define debug  ev.printf
+#define debug  EV << OPP_Global::stringf
 
 
 
@@ -515,7 +516,7 @@ class OLSR : public ManetRoutingBase
     virtual int     degree(OLSR_nb_tuple*);
 
     static bool seq_num_bigger_than(uint16_t, uint16_t);
-    virtual int numInitStages() const  {return 5;}
+    virtual int numInitStages() const { return 5; }
     virtual void initialize(int stage);
     virtual void    mac_failed(IPv4Datagram*);
     virtual void    recv(cMessage *p) {}

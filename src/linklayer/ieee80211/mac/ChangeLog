@@ -1,3 +1,16 @@
+2014-03-19  ------ inet-2.3.0 released ------
+
+2013-11-15  Rudolf Hornig
+
+	802.11mac: fixed missing default bitrate values. Changed the default
+	bitrate to 1Mbps according to spec.
+
+	Fingerprints updated.
+
+2013-11-13  Rudolf Hornig
+
+	Ieee802.11: fix for controlBitrate parameter.
+
 2013-08-22  ------ inet-2.2.0 released ------
 
 2013-07-29  Zoltan Bojthe

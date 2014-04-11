@@ -35,7 +35,7 @@
 
 Define_Module(RTP);
 
-simsignal_t RTP::rcvdPkSignal = SIMSIGNAL_NULL;
+simsignal_t RTP::rcvdPkSignal = registerSignal("rcvdPk");
 
 //
 // methods inherited from cSimpleModule
@@ -43,6 +43,8 @@ simsignal_t RTP::rcvdPkSignal = SIMSIGNAL_NULL;
 
 void RTP::initialize(int stage)
 {
+    cSimpleModule::initialize(stage);
+
     if (stage == 0)
     {
         _leaveSession = false;
@@ -51,8 +53,6 @@ void RTP::initialize(int stage)
         rtcpInGate = findGate("rtcpIn");
         udpInGate = findGate("udpIn");
         _udpSocket.setOutputGate(gate("udpOut"));
-
-        rcvdPkSignal = registerSignal("rcvdPk");
     }
     else if (stage == 1)
     {
@@ -156,7 +156,7 @@ void RTP::handleMessageFromProfile(cMessage *msg)
     default:
         throw cRuntimeError("Unknown RTPInnerPacket type %d from profile", rinp->getType());
     }
-    ev << "handleMessageFromProfile(cMessage *msg) Exit" << endl;
+    EV << "handleMessageFromProfile(cMessage *msg) Exit" << endl;
 }
 
 void RTP::handleMessageFromRTCP(cMessage *msg)
@@ -222,7 +222,7 @@ void RTP::leaveSession(RTPCILeaveSession *rifp)
 void RTP::createSenderModule(RTPCICreateSenderModule *rifp)
 {
     RTPInnerPacket *rinp = new RTPInnerPacket("createSenderModule()");
-    ev << rifp->getSsrc()<<endl;
+    EV << rifp->getSsrc()<<endl;
     rinp->setCreateSenderModulePkt(rifp->getSsrc(), rifp->getPayloadType(), rifp->getFileName());
     send(rinp, "profileOut");
 

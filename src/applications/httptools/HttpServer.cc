@@ -35,33 +35,36 @@ Define_Module(HttpServer);
 void HttpServer::initialize(int stage)
 {
     HttpServerBase::initialize(stage);
-    if (stage != 0)
-        return;
 
-    EV_DEBUG << "Initializing server component (sockets version)" << endl;
+    if (stage == 0)
+    {
+        numBroken = 0;
+        socketsOpened = 0;
 
-    int port = par("port");
+        WATCH(numBroken);
+        WATCH(socketsOpened);
+    }
+    else if (stage == 3)
+    {
+        EV_DEBUG << "Initializing server component (sockets version)" << endl;
 
-    TCPSocket listensocket;
-    listensocket.setOutputGate(gate("tcpOut"));
-    listensocket.setDataTransferMode(TCP_TRANSFER_OBJECT);
-    listensocket.bind(port);
-    listensocket.setCallbackObject(this);
-    listensocket.listen();
+        int port = par("port");
 
-    numBroken = 0;
-    socketsOpened = 0;
-
-    WATCH(numBroken);
-    WATCH(socketsOpened);
+        TCPSocket listensocket;
+        listensocket.setOutputGate(gate("tcpOut"));
+        listensocket.setDataTransferMode(TCP_TRANSFER_OBJECT);
+        listensocket.bind(port);
+        listensocket.setCallbackObject(this);
+        listensocket.listen();
+    }
 }
 
 void HttpServer::finish()
 {
     HttpServerBase::finish();
 
-    EV_SUMMARY << "Sockets opened: " << socketsOpened << endl;
-    EV_SUMMARY << "Broken connections: " << numBroken << endl;
+    EV_INFO << "Sockets opened: " << socketsOpened << endl;
+    EV_INFO << "Broken connections: " << numBroken << endl;
 
     recordScalar("sock.opened", socketsOpened);
     recordScalar("sock.broken", numBroken);
@@ -157,7 +160,7 @@ void HttpServer::socketClosed(int connId, void *yourPtr)
 
 void HttpServer::socketFailure(int connId, void *yourPtr, int code)
 {
-    EV_WARNING << "connection broken. Connection id " << connId << endl;
+    EV_WARN << "connection broken. Connection id " << connId << endl;
     numBroken++;
 
     EV_INFO << "connection closed. Connection id " << connId << endl;
@@ -170,9 +173,9 @@ void HttpServer::socketFailure(int connId, void *yourPtr, int code)
     TCPSocket *socket = (TCPSocket*)yourPtr;
 
     if (code==TCP_I_CONNECTION_RESET)
-        EV_WARNING << "Connection reset!\n";
+        EV_WARN << "Connection reset!\n";
     else if (code==TCP_I_CONNECTION_REFUSED)
-        EV_WARNING << "Connection refused!\n";
+        EV_WARN << "Connection refused!\n";
 
     // Cleanup
     sockCollection.removeSocket(socket);

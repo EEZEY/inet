@@ -19,9 +19,9 @@
 #include "ChannelAccess.h"
 #include "IMobility.h"
 
-#define coreEV (ev.isDisabled()||!coreDebug) ? ev : ev << logName() << "::ChannelAccess: "
+#define coreEV (ev.isDisabled()||!coreDebug) ? EV : EV << logName() << "::ChannelAccess: "
 
-simsignal_t ChannelAccess::mobilityStateChangedSignal = SIMSIGNAL_NULL;
+simsignal_t ChannelAccess::mobilityStateChangedSignal = registerSignal("mobilityStateChanged");
 
 static int parseInt(const char *s, int defaultValue)
 {
@@ -62,7 +62,6 @@ void ChannelAccess::initialize(int stage)
 
         positionUpdateArrived = false;
         // register to get a notification when position changes
-        mobilityStateChangedSignal = registerSignal("mobilityStateChanged");
         hostModule->subscribe(mobilityStateChangedSignal, this);
     }
     else if (stage == 2)

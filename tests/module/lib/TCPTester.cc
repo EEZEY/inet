@@ -18,6 +18,8 @@
 
 
 #include "TCPTester.h"
+
+#include "IPSocket.h"
 #include "IPv4ControlInfo.h"
 
 TCPTesterBase::TCPTesterBase() : cSimpleModule()
@@ -28,7 +30,7 @@ void TCPTesterBase::initialize()
 {
     fromASeq = 0;
     fromBSeq = 0;
-    tcpdump.setOutStream(ev.getOStream());
+    tcpdump.setOutStream(EVSTREAM);
 }
 
 void TCPTesterBase::dump(TCPSegment *seg, bool fromA, const char *comment)
@@ -132,11 +134,19 @@ void TCPScriptableTester::handleMessage(cMessage *msg)
         TCPSegment *seg = check_and_cast<TCPSegment *>(msg);
         dispatchSegment(seg);
     }
-    else
+    else if (msg->isPacket())
     {
         TCPSegment *seg = check_and_cast<TCPSegment *>(msg);
         bool fromA = msg->arrivedOn("in1");
         processIncomingSegment(seg, fromA);
+    }
+    else if (msg->getKind() == IP_C_REGISTER_PROTOCOL) {
+        IPRegisterProtocolCommand * command = check_and_cast<IPRegisterProtocolCommand *>(msg->getControlInfo());
+        delete msg;
+    }
+    else
+    {
+        throw cRuntimeError("Unknown message");
     }
 }
 
@@ -222,11 +232,19 @@ void TCPRandomTester::handleMessage(cMessage *msg)
         TCPSegment *seg = check_and_cast<TCPSegment *>(msg);
         dispatchSegment(seg);
     }
-    else
+    else if (msg->isPacket())
     {
         TCPSegment *seg = check_and_cast<TCPSegment *>(msg);
         bool fromA = msg->arrivedOn("in1");
         processIncomingSegment(seg, fromA);
+    }
+    else if (msg->getKind() == IP_C_REGISTER_PROTOCOL) {
+        IPRegisterProtocolCommand * command = check_and_cast<IPRegisterProtocolCommand *>(msg->getControlInfo());
+        delete msg;
+    }
+    else
+    {
+        throw cRuntimeError("Unknown message");
     }
 }
 

@@ -23,9 +23,10 @@
 //
 
 #include <omnetpp.h>
+#include "Compat.h"
 
-#if OMNETPP_VERSION < 0x0402
-#  error At least OMNeT++/OMNEST version 4.2 required
+#if OMNETPP_VERSION < 0x0403
+#  error At least OMNeT++/OMNEST version 4.3 required
 #endif
 
 #if defined(INET_EXPORT)
@@ -39,13 +40,6 @@
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
-
-
-//
-// Macro to prevent executing ev<< statements in Express mode.
-// Compare ev/sec values with code compiled with #define EV ev.
-//
-#define EV ev.isDisabled()?ev:ev
 
 // used at several places as
 #define SPEED_OF_LIGHT 299792458.0
@@ -70,29 +64,4 @@ T *__checknull(T *p, const char *expr, const char *file, int line)
 
 #define PK(msg)  check_and_cast<cPacket *>(msg)    /*XXX temp def*/
 
-
-#ifdef _MSC_VER
-// complementary error function, not in MSVC
-double INET_API erfc(double x);
-
-// ISO C99 function, not in MSVC
-inline long lrint(double x)
-{
-    return (long)floor(x+0.5);
-}
-
-// ISO C99 function, not in MSVC
-inline double fmin(double a, double b)
-{
-    return a < b ? a : b;
-}
-
-// ISO C99 function, not in MSVC
-inline double fmax(double a, double b)
-{
-    return a > b ? a : b;
-}
-#endif
-
-
-#endif
+#endif  // __INET_INETDEFS_H

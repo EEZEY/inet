@@ -26,41 +26,30 @@
 
 Define_Module(VoIPStreamReceiver);
 
-simsignal_t VoIPStreamReceiver::rcvdPkSignal = SIMSIGNAL_NULL;
-simsignal_t VoIPStreamReceiver::lostSamplesSignal = SIMSIGNAL_NULL;
-simsignal_t VoIPStreamReceiver::lostPacketsSignal = SIMSIGNAL_NULL;
-simsignal_t VoIPStreamReceiver::dropPkSignal = SIMSIGNAL_NULL;
-simsignal_t VoIPStreamReceiver::packetHasVoiceSignal = SIMSIGNAL_NULL;
-simsignal_t VoIPStreamReceiver::connStateSignal = SIMSIGNAL_NULL;
-simsignal_t VoIPStreamReceiver::delaySignal = SIMSIGNAL_NULL;
+simsignal_t VoIPStreamReceiver::rcvdPkSignal = registerSignal("rcvdPk");
+simsignal_t VoIPStreamReceiver::lostSamplesSignal = registerSignal("lostSamples");
+simsignal_t VoIPStreamReceiver::lostPacketsSignal = registerSignal("lostPackets");
+simsignal_t VoIPStreamReceiver::dropPkSignal = registerSignal("dropPk");
+simsignal_t VoIPStreamReceiver::packetHasVoiceSignal = registerSignal("packetHasVoice");
+simsignal_t VoIPStreamReceiver::connStateSignal = registerSignal("connState");
+simsignal_t VoIPStreamReceiver::delaySignal = registerSignal("delay");
 
 VoIPStreamReceiver::~VoIPStreamReceiver()
 {
     closeConnection();
 }
 
-void VoIPStreamReceiver::initSignals()
-{
-    rcvdPkSignal = registerSignal("rcvdPk");
-    lostSamplesSignal = registerSignal("lostSamples");
-    lostPacketsSignal = registerSignal("lostPackets");
-    dropPkSignal = registerSignal("dropPk");
-    packetHasVoiceSignal = registerSignal("packetHasVoice");
-    connStateSignal = registerSignal("connState");
-    delaySignal = registerSignal("delay");
-}
-
 void VoIPStreamReceiver::initialize(int stage)
 {
+    cSimpleModule::initialize(stage);
+
     if (stage == 0)
     {
-        initSignals();
-
         // Hack for create results folder
         recordScalar("hackForCreateResultsFolder", 0);
 
         // Say Hello to the world
-        ev << "VoIPSinkApp initialize()" << endl;
+        EV << "VoIPSinkApp initialize()" << endl;
 
         // read parameters
         localPort = par("localPort");
@@ -69,17 +58,17 @@ void VoIPStreamReceiver::initialize(int stage)
 
         // initialize avcodec library
         av_register_all();
-
-        socket.setOutputGate(gate("udpOut"));
-        socket.bind(localPort);
     }
-    else if (stage == 1)
+    else if (stage == 3)
     {
         bool isOperational;
         NodeStatus *nodeStatus = dynamic_cast<NodeStatus *>(findContainingNode(this)->getSubmodule("status"));
         isOperational = (!nodeStatus) || nodeStatus->getState() == NodeStatus::UP;
         if (!isOperational)
             throw cRuntimeError("This module doesn't support starting in node DOWN state");
+
+        socket.setOutputGate(gate("udpOut"));
+        socket.bind(localPort);
     }
 }
 
@@ -270,7 +259,7 @@ void VoIPStreamReceiver::decodePacket(VoIPStreamPacket *vp)
     {
         int lostSamples = ceil(SIMTIME_DBL((simTime() - curConn.lastPacketFinish) * curConn.sampleRate));
         ASSERT(lostSamples > 0);
-        ev << "Lost " << lostSamples << " samples\n";
+        EV << "Lost " << lostSamples << " samples\n";
         emit(lostSamplesSignal, lostSamples);
         curConn.writeLostSamples(lostSamples);
         curConn.lastPacketFinish += lostSamples * (1.0 / curConn.sampleRate);
@@ -290,7 +279,7 @@ void VoIPStreamReceiver::decodePacket(VoIPStreamPacket *vp)
 
 void VoIPStreamReceiver::finish()
 {
-    ev << "Sink finish()" << endl;
+    EV << "Sink finish()" << endl;
     closeConnection();
 }
 
