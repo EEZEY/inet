@@ -33,6 +33,9 @@
 #include "RoutingTableParser.h"
 #include "NodeOperations.h"
 #include "NodeStatus.h"
+#include "opp_utils.h"
+
+using namespace OPP_Global;
 
 Define_Module(RoutingTable);
 
@@ -282,13 +285,13 @@ void RoutingTable::invalidateCache()
 void RoutingTable::printRoutingTable() const
 {
     EV << "-- Routing table --\n";
-    ev.printf("%-16s %-16s %-16s %-4s %-16s %s\n",
+    EV << stringf("%-16s %-16s %-16s %-4s %-16s %s\n",
               "Destination", "Netmask", "Gateway", "Iface", "", "Metric");
 
     for (int i=0; i<getNumRoutes(); i++) {
         IPv4Route *route = getRoute(i);
         InterfaceEntry *interfacePtr = route->getInterface();
-        ev.printf("%-16s %-16s %-16s %-4s (%s) %d\n",
+        EV << stringf("%-16s %-16s %-16s %-4s (%s) %d\n",
                   route->getDestination().isUnspecified() ? "*" : route->getDestination().str().c_str(),
                   route->getNetmask().isUnspecified() ? "*" : route->getNetmask().str().c_str(),
                   route->getGateway().isUnspecified() ? "*" : route->getGateway().str().c_str(),
@@ -302,12 +305,12 @@ void RoutingTable::printRoutingTable() const
 void RoutingTable::printMulticastRoutingTable() const
 {
     EV << "-- Multicast routing table --\n";
-    ev.printf("%-16s %-16s %-16s %-6s %-6s %s\n",
+    EV << stringf("%-16s %-16s %-16s %-6s %-6s %s\n",
               "Source", "Netmask", "Group", "Metric", "In", "Outs");
 
     for (int i=0; i<getNumMulticastRoutes(); i++) {
         IPv4MulticastRoute *route = getMulticastRoute(i);
-        ev.printf("%-16s %-16s %-16s %-6d %-6s ",
+        EV << stringf("%-16s %-16s %-16s %-6d %-6s ",
                   route->getOrigin().isUnspecified() ? "*" : route->getOrigin().str().c_str(),
                   route->getOriginNetmask().isUnspecified() ? "*" : route->getOriginNetmask().str().c_str(),
                   route->getMulticastGroup().isUnspecified() ? "*" : route->getMulticastGroup().str().c_str(),
@@ -850,7 +853,7 @@ void RoutingTable::updateNetmaskRoutes()
     // first, delete all routes with src=IFACENETMASK
     for (unsigned int k=0; k<routes.size(); k++)
     {
-        if (routes[k]->getSource()==IPv4Route::IFACENETMASK)
+        if (routes[k]->getSourceType()==IPv4Route::IFACENETMASK)
         {
             std::vector<IPv4Route *>::iterator it = routes.begin()+(k--);  // '--' is necessary because indices shift down
             IPv4Route *route = *it;
@@ -870,7 +873,8 @@ void RoutingTable::updateNetmaskRoutes()
         if (ie->ipv4Data() && ie->ipv4Data()->getNetmask()!=IPv4Address::ALLONES_ADDRESS)
         {
             IPv4Route *route = createNewRoute();
-            route->setSource(IPv4Route::IFACENETMASK);
+            route->setSourceType(IPv4Route::IFACENETMASK);
+            route->setSource(ie);
             route->setDestination(ie->ipv4Data()->getIPAddress().doAnd(ie->ipv4Data()->getNetmask()));
             route->setNetmask(ie->ipv4Data()->getNetmask());
             route->setGateway(IPv4Address());

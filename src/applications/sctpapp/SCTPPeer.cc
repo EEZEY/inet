@@ -38,9 +38,9 @@
 
 Define_Module(SCTPPeer);
 
-simsignal_t SCTPPeer::sentPkSignal = SIMSIGNAL_NULL;
-simsignal_t SCTPPeer::echoedPkSignal = SIMSIGNAL_NULL;
-simsignal_t SCTPPeer::rcvdPkSignal = SIMSIGNAL_NULL;
+simsignal_t SCTPPeer::sentPkSignal = registerSignal("sentPk");
+simsignal_t SCTPPeer::echoedPkSignal = registerSignal("echoedPk");
+simsignal_t SCTPPeer::rcvdPkSignal = registerSignal("rcvdPk");
 
 SCTPPeer::SCTPPeer()
 {
@@ -72,6 +72,8 @@ SCTPPeer::~SCTPPeer()
 
 void SCTPPeer::initialize(int stage)
 {
+    cSimpleModule::initialize(stage);
+
     if (stage == 0)
     {
         numSessions = packetsSent = packetsRcvd = bytesSent = notifications = 0;
@@ -80,11 +82,9 @@ void SCTPPeer::initialize(int stage)
         WATCH(packetsRcvd);
         WATCH(bytesSent);
         WATCH(numRequestsToSend);
-
-        sentPkSignal = registerSignal("sentPk");
-        echoedPkSignal = registerSignal("echoedPk");
-        rcvdPkSignal = registerSignal("rcvdPk");
-
+    }
+    else if (stage == 3)
+    {
         // parameters
         const char *addressesString = par("localAddress");
         AddressVector addresses = IPvXAddressResolver().resolve(cStringTokenizer(addressesString).asVector());
@@ -115,7 +115,7 @@ void SCTPPeer::initialize(int stage)
         clientSocket.setCallbackObject(this);
         clientSocket.setOutputGate(gate("sctpOut"));
 
-        if ((simtime_t)par("startTime")>0)
+        if ((simtime_t)par("startTime") > SIMTIME_ZERO)     //FIXME is invalid the startTime == 0 ????
         {
             connectTimer = new cMessage("ConnectTimer");
             connectTimer->setKind(MSGKIND_CONNECT);
@@ -124,9 +124,7 @@ void SCTPPeer::initialize(int stage)
         schedule = false;
         shutdownReceived = false;
         sendAllowed = true;
-    }
-    else if (stage == 1)
-    {
+
         bool isOperational;
         NodeStatus *nodeStatus = dynamic_cast<NodeStatus *>(findContainingNode(this)->getSubmodule("status"));
         isOperational = (!nodeStatus) || nodeStatus->getState() == NodeStatus::UP;
@@ -191,7 +189,13 @@ void SCTPPeer::connect()
     sctpEV3 << "Assoc " << clientSocket.getConnectionId() << "::connect to address " << connectAddress << ", port " << connectPort << "\n";
     numSessions++;
     bool streamReset = par("streamReset");
-    clientSocket.connect(IPvXAddressResolver().resolve(connectAddress, 1), connectPort, streamReset, (int32)par("prMethod"), (uint32)par("numRequestsPerSession"));
+    IPvXAddress destination;
+    IPvXAddressResolver().tryResolve(connectAddress, destination);
+    if (destination.isUnspecified())
+        EV << "cannot resolve destination address: " << connectAddress << endl;
+    else {
+        clientSocket.connect(destination, connectPort, streamReset, (int32)par("prMethod"), (uint32)par("numRequestsPerSession"));
+    }
 
     if (!streamReset)
         streamReset = false;
@@ -457,7 +461,7 @@ void SCTPPeer::handleMessage(cMessage *msg)
         case SCTP_I_SEND_STREAMS_RESETTED:
         case SCTP_I_RCV_STREAMS_RESETTED:
         {
-            ev << "Streams have been resetted\n";
+            EV << "Streams have been resetted\n";
             break;
         }
         case SCTP_I_CLOSED:
@@ -540,7 +544,7 @@ void SCTPPeer::socketPeerClosed(int32, void *)
     // close the connection (if not already closed)
     if (clientSocket.getState()==SCTPSocket::PEER_CLOSED)
     {
-        ev << "remote SCTP closed, closing here as well\n";
+        EV << "remote SCTP closed, closing here as well\n";
         setStatusString("closing");
         clientSocket.close();
     }
@@ -549,14 +553,14 @@ void SCTPPeer::socketPeerClosed(int32, void *)
 void SCTPPeer::socketClosed(int32, void *)
 {
     // *redefine* to start another session etc.
-    ev << "connection closed\n";
+    EV << "connection closed\n";
     setStatusString("closed");
 }
 
 void SCTPPeer::socketFailure(int32, void *, int32 code)
 {
     // subclasses may override this function, and add code try to reconnect after a delay.
-    ev << "connection broken\n";
+    EV << "connection broken\n";
     setStatusString("broken");
     // reconnect after a delay
     timeMsg->setKind(MSGKIND_CONNECT);
@@ -623,7 +627,7 @@ void SCTPPeer::socketEstablished(int32, void *)
 {
     int32 count = 0;
      // *redefine* to perform or schedule first sending
-    ev << "SCTPClient: connected\n";
+    EV << "SCTPClient: connected\n";
     setStatusString("connected");
     // determine number of requests in this session
     numRequestsToSend = (long) par("numRequestsPerSession");
@@ -776,16 +780,16 @@ void SCTPPeer::sendqueueFullArrived(int32 assocId)
 
 void SCTPPeer::finish()
 {
-    ev << getFullPath() << ": opened " << numSessions << " sessions\n";
-    ev << getFullPath() << ": sent " << bytesSent << " bytes in " << packetsSent << " packets\n";
+    EV << getFullPath() << ": opened " << numSessions << " sessions\n";
+    EV << getFullPath() << ": sent " << bytesSent << " bytes in " << packetsSent << " packets\n";
 
     for (RcvdBytesPerAssoc::iterator l=rcvdBytesPerAssoc.begin(); l!=rcvdBytesPerAssoc.end(); ++l)
     {
-        ev << getFullPath() << ": received " << l->second << " bytes in assoc " << l->first << "\n";
+        EV << getFullPath() << ": received " << l->second << " bytes in assoc " << l->first << "\n";
     }
 
-    ev << getFullPath() << "Over all " << packetsRcvd << " packets received\n ";
-    ev << getFullPath() << "Over all " << notifications << " notifications received\n ";
+    EV << getFullPath() << "Over all " << packetsRcvd << " packets received\n ";
+    EV << getFullPath() << "Over all " << notifications << " notifications received\n ";
 
     for (BytesPerAssoc::iterator j = bytesPerAssoc.begin(); j != bytesPerAssoc.end(); j++)
     {

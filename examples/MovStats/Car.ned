@@ -24,7 +24,7 @@ import inet.base.NotificationBoard;
 import inet.networklayer.autorouting.ipv4.HostAutoConfigurator;
 import inet.networklayer.common.InterfaceTable;
 import inet.applications.traci.TraCIDemo;
-import inet.mobility.models.TraCIMobility;
+import inet.mobility.single.TraCIMobility;
 import inet.networklayer.ipv4.RoutingTable;
 import inet.transport.udp.UDP;
 import inet.nodes.inet.NetworkLayer;
@@ -78,8 +78,8 @@ module Car
                 @display("p=304,461;q=queue");
         }
     connections allowunconnected:
-        udp.ipOut --> networkLayer.udpIn;
-        udp.ipIn <-- networkLayer.udpOut;
+        udp.ipOut --> networkLayer.transportIn[0];
+        udp.ipIn <-- networkLayer.transportOut[0];
 
         wlan.upperLayerOut --> networkLayer.ifIn[0];
         wlan.upperLayerIn <-- networkLayer.ifOut[0];

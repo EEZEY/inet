@@ -24,7 +24,7 @@ import inet.base.NotificationBoard;
 import inet.networklayer.autorouting.ipv4.HostAutoConfigurator;
 import inet.networklayer.common.InterfaceTable;
 import inet.applications.udpapp.UDPBasicBurst;
-import inet.mobility.models.StationaryMobility;
+import inet.mobility.static.StationaryMobility;
 import inet.networklayer.ipv4.RoutingTable;
 import inet.networklayer.manetrouting.DYMO;
 import inet.transport.udp.UDP;
@@ -89,14 +89,14 @@ module RSU
         udp.appOut++ --> app.udpIn;
         udp.appIn++ <-- app.udpOut;
 
-        udp.ipOut --> networkLayer.udpIn;
-        udp.ipIn <-- networkLayer.udpOut;
+        udp.ipOut --> networkLayer.transportIn[0];
+        udp.ipIn <-- networkLayer.transportOut[0];
 
         wlan.upperLayerOut --> networkLayer.ifIn[0];
         wlan.upperLayerIn <-- networkLayer.ifOut[0];
         
-		networkLayer.manetOut --> manetrouting.from_ip;
-		networkLayer.manetIn <-- manetrouting.to_ip;
+		networkLayer.ifOut[0] --> manetrouting.from_ip;
+		networkLayer.ifIn[0] <-- manetrouting.to_ip;
 		
         radioIn --> wlan.radioIn;
 }

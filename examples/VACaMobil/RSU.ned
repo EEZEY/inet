@@ -24,7 +24,7 @@ import inet.base.NotificationBoard;
 import inet.networklayer.autorouting.ipv4.HostAutoConfigurator;
 import inet.networklayer.common.InterfaceTable;
 import inet.applications.traci.TraCIDemo;
-import inet.mobility.models.*;
+import inet.mobility.static.StationaryMobility;
 import inet.networklayer.ipv4.RoutingTable;
 import inet.transport.udp.UDP;
 import inet.nodes.inet.NetworkLayer;

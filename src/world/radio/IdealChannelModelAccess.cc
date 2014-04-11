@@ -23,9 +23,9 @@
 #include "IMobility.h"
 
 
-#define coreEV (ev.isDisabled()||!coreDebug) ? ev : ev << logName() << "::IdealChannelModelAccess: "
+#define coreEV (ev.isDisabled()||!coreDebug) ? EV : EV << logName() << "::IdealChannelModelAccess: "
 
-simsignal_t IdealChannelModelAccess::mobilityStateChangedSignal = SIMSIGNAL_NULL;
+simsignal_t IdealChannelModelAccess::mobilityStateChangedSignal = registerSignal("mobilityStateChanged");
 
 // the destructor unregister the radio module
 IdealChannelModelAccess::~IdealChannelModelAccess()
@@ -58,7 +58,6 @@ void IdealChannelModelAccess::initialize(int stage)
 
         positionUpdateArrived = false;
         // register to get a notification when position changes
-        mobilityStateChangedSignal = registerSignal("mobilityStateChanged");
         hostModule->subscribe(mobilityStateChangedSignal, this);
     }
     else if (stage == 2)

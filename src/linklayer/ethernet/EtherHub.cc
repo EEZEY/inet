@@ -21,12 +21,12 @@
 Define_Module(EtherHub);
 
 
-simsignal_t EtherHub::pkSignal = SIMSIGNAL_NULL;
+simsignal_t EtherHub::pkSignal = registerSignal("pk");
 
-static cEnvir& operator<<(cEnvir& out, cMessage *msg)
+inline std::ostream& operator<<(std::ostream& os, cMessage *msg)
 {
-    out.printf("(%s)%s", msg->getClassName(), msg->getFullName());
-    return out;
+    os << "(" << msg->getClassName() << ")" << msg->getFullName();
+    return os;
 }
 
 void EtherHub::initialize()
@@ -34,7 +34,6 @@ void EtherHub::initialize()
     numPorts = gateSize("ethg");
     inputGateBaseId = gateBaseId("ethg$i");
     outputGateBaseId = gateBaseId("ethg$o");
-    pkSignal = registerSignal("pk");
 
     numMessages = 0;
     WATCH(numMessages);

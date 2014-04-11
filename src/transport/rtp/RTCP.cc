@@ -33,7 +33,7 @@
 
 Define_Module(RTCP);
 
-simsignal_t RTCP::rcvdPkSignal = SIMSIGNAL_NULL;
+simsignal_t RTCP::rcvdPkSignal = registerSignal("rcvdPk");
 
 RTCP::RTCP()
 {
@@ -42,6 +42,8 @@ RTCP::RTCP()
 
 void RTCP::initialize(int stage)
 {
+    cSimpleModule::initialize(stage);
+
     if (stage == 0)
     {
         // initialize variables
@@ -53,8 +55,6 @@ void RTCP::initialize(int stage)
         _averagePacketSize = 0.0;
 
         _participantInfos.setName("ParticipantInfos");
-
-        rcvdPkSignal = registerSignal("rcvdPk");
     }
     else if (stage == 1)
     {
@@ -255,7 +255,7 @@ void RTCP::chooseSSRC()
         ssrcConflict = findParticipantInfo(ssrc) != NULL;
     } while (ssrcConflict);
 
-    ev << "chooseSSRC" << ssrc;
+    EV << "chooseSSRC" << ssrc;
     _senderInfo->setSsrc(ssrc);
     _participantInfos.add(_senderInfo);
     _ssrcChosen = true;
@@ -379,7 +379,7 @@ void RTCP::processIncomingRTPPacket(RTPPacket *packet, IPv4Address address, int 
     }
     else
     {
-        ev << "Incoming packet address/port conflict, packet dropped.\n";
+        EV << "Incoming packet address/port conflict, packet dropped.\n";
         delete packet;
     }
 }
