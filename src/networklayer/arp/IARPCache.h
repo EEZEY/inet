@@ -58,6 +58,9 @@ class INET_API IARPCache
      */
     virtual MACAddress getMACAddressFor(const IPv4Address&) const = 0;
 
+    virtual bool isGlobal() const = 0;
+    virtual bool isDelPkt() const = 0;
+
     /**
      * Returns the IPv4 address for the given MAC address. If it is not available
      * (not in the cache, pending resolution, or already expired), UNSPECIFIED_ADDRESS
@@ -70,6 +73,8 @@ class INET_API IARPCache
      * This should only be called if getMACAddressFor(addr) fails.
      */
     virtual void startAddressResolution(const IPv4Address&, const InterfaceEntry *ie) = 0;
+
+
 };
 
 class INET_API ARPCacheAccess : public ModuleAccess<IARPCache>
