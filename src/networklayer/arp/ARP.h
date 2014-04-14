@@ -67,6 +67,7 @@ class INET_API ARP : public cSimpleModule, public IARPCache, public ILifecycle, 
     simtime_t cacheTimeout;
     bool respondToProxyARP;
     bool globalARP;
+    bool delPackets;
 
     bool isUp;
 
@@ -102,6 +103,8 @@ class INET_API ARP : public cSimpleModule, public IARPCache, public ILifecycle, 
     virtual void startAddressResolution(const IPv4Address& addr, const InterfaceEntry *ie);
     virtual IPv4Address getIPv4AddressFor(const MACAddress& addr) const;
     virtual MACAddress getMACAddressFor(const IPv4Address& addr) const;
+    virtual bool isGlobal() const {return globalARP;}
+    virtual bool isDelPkt()const {return delPackets;}
     /// @}
 
     // INotifiable

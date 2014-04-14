@@ -82,6 +82,7 @@ void ARP::initialize(int stage)
         cacheTimeout = par("cacheTimeout");
         respondToProxyARP = par("respondToProxyARP");
         globalARP = par("globalARP");
+        delPackets = par("delPackets");
 
         netwOutGate = gate("netwOut");
 
