@@ -25,7 +25,7 @@ import inet.base.NotificationBoard;
 import inet.networklayer.autorouting.ipv4.HostAutoConfigurator;
 import inet.networklayer.common.InterfaceTable;
 import inet.applications.traci.TraCIDemo;
-import inet.mobility.models.TraCIMobility;
+import inet.mobility.single.TraCIMobility;
 import inet.networklayer.ipv4.RoutingTable;
 import inet.transport.udp.UDP;
 import inet.nodes.inet.NetworkLayer;
@@ -86,8 +86,8 @@ module Car
 
         radioIn --> wlan.radioIn;
 
-        udp.ipOut --> networkLayer.udpIn;
-        udp.ipIn <-- networkLayer.udpOut;
+        udp.ipOut --> networkLayer.transportIn++;
+        udp.ipIn <-- networkLayer.transportOut++;
 
         udp.appOut++ --> udpBasicApp.udpIn;
         udp.appIn++ <-- udpBasicApp.udpOut;

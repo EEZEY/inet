@@ -23,7 +23,7 @@ package inet.tests.traci;
 import inet.base.NotificationBoard;
 import inet.networklayer.common.InterfaceTable;
 import inet.applications.traci.TraCITestApp;
-import inet.mobility.models.TraCIMobility;
+import inet.mobility.single.TraCIMobility;
 import inet.networklayer.ipv4.RoutingTable;
 import inet.transport.udp.UDP;
 import inet.nodes.inet.NetworkLayer;

@@ -26,7 +26,7 @@
 
 #include "ApplicationBase.h"
 #include "UDPSocket.h"
-
+#include "omnetpp.h"
 
 /**
  * UDP application. See NED for more info.

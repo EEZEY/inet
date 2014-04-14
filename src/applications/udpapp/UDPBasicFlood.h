@@ -24,14 +24,14 @@
 
 #include "INETDefs.h"
 
-#include "AppBase.h"
+#include "ApplicationBase.h"
 #include "UDPSocket.h"
-
+#include "omnetpp.h"
 
 /**
  * UDP application. See NED for more info.
  */
-class INET_API UDPBasicFlood : public AppBase
+class INET_API UDPBasicFlood : public ApplicationBase
 {
   protected:
     enum SelfMsgKinds { START = 1, SEND, STOP };

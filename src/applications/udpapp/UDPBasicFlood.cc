@@ -42,7 +42,7 @@ UDPBasicFlood::~UDPBasicFlood()
 
 void UDPBasicFlood::initialize(int stage)
 {
-    AppBase::initialize(stage);
+    ApplicationBase::initialize(stage);
 
     // because of IPvXAddressResolver, we need to wait until interfaces are registered,
     // address auto-assignment takes place etc.
@@ -72,7 +72,7 @@ void UDPBasicFlood::finish()
 {
     recordScalar("packets sent", numSent);
     recordScalar("packets received", numReceived);
-    AppBase::finish();
+    ApplicationBase::finish();
 }
 
 void UDPBasicFlood::setSocketOptions()
