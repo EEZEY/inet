@@ -853,8 +853,13 @@ void IPv4::sendDatagramToOutput(IPv4Datagram *datagram, const InterfaceEntry *ie
 
             if (nextHopMacAddr.isUnspecified())
             {
-                pendingPackets[nextHopAddr].insert(datagram);
-                arp->startAddressResolution(nextHopAddr, ie);
+                if(arp->isGlobal() && arp->isDelPkt()){
+                    cancelAndDelete(datagram);
+                }
+                else{
+                    pendingPackets[nextHopAddr].insert(datagram);
+                    arp->startAddressResolution(nextHopAddr, ie);
+                }
             }
             else
             {
